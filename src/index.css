@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  body {
+    font-family: var(--font-mono);
+    background-color: #000000;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* High-Contrast Technical Console Theme (Default) */
+:root, [data-theme="neon"], [data-theme="obsidian"] {
+  --bg-primary: #000000;
+  --bg-secondary: #050505;
+  --bg-panel: #000000;
+  --border-color: #00f0ff;
+  --accent-primary: #00f0ff;
+  --accent-secondary: #00ff66;
+  --accent-warn: #ffb703;
+  --accent-danger: #ff0055;
+  --text-main: #ffffff;
+  --text-dim: #94a3b8;
+}
+
+[data-theme="amber"] {
+  --bg-primary: #000000;
+  --bg-secondary: #060401;
+  --bg-panel: #000000;
+  --border-color: #ffb703;
+  --accent-primary: #ffb703;
+  --accent-secondary: #a3e635;
+  --accent-warn: #fbbf24;
+  --accent-danger: #ef4444;
+  --text-main: #fffbeb;
+  --text-dim: #d97706;
+}
+
+[data-theme="emerald"], [data-theme="cleanroom"] {
+  --bg-primary: #000000;
+  --bg-secondary: #010603;
+  --bg-panel: #000000;
+  --border-color: #00ff66;
+  --accent-primary: #00ff66;
+  --accent-secondary: #00f0ff;
+  --accent-warn: #fbbf24;
+  --accent-danger: #ff0055;
+  --text-main: #f0fdf4;
+  --text-dim: #4ade80;
+}
+
+/* Stark Neon Wireframe Outlines */
+.wireframe-cyan {
+  border: 1px solid #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2), inset 0 0 12px rgba(0, 240, 255, 0.05);
+  background-color: #000000;
+}
+
+.wireframe-emerald {
+  border: 1px solid #00ff66;
+  box-shadow: 0 0 12px rgba(0, 255, 102, 0.2), inset 0 0 12px rgba(0, 255, 102, 0.05);
+  background-color: #000000;
+}
+
+.wireframe-amber {
+  border: 1px solid #ffb703;
+  box-shadow: 0 0 12px rgba(255, 183, 3, 0.2), inset 0 0 12px rgba(255, 183, 3, 0.05);
+  background-color: #000000;
+}
+
+.wireframe-rose {
+  border: 1px solid #ff0055;
+  box-shadow: 0 0 14px rgba(255, 0, 85, 0.25), inset 0 0 14px rgba(255, 0, 85, 0.06);
+  background-color: #000000;
+}
+
+.wireframe-box {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #000000;
+  position: relative;
+}
+
+.wireframe-box:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+/* Neon Text Glows */
+.neon-text-cyan {
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+}
+
+.neon-text-emerald {
+  color: #00ff66;
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+}
+
+.neon-text-rose {
+  color: #ff0055;
+  text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
+}
+
+/* High-Contrast Control Console Grid */
+.console-grid {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+}
+
+.console-dots {
+  background-size: 20px 20px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+}
+
+/* CRT Scanline & Radar Sweeps */
+.radar-sweep {
+  background: conic-gradient(from 0deg at 50% 50%, rgba(0, 240, 255, 0) 0deg, rgba(0, 240, 255, 0.25) 340deg, rgba(0, 240, 255, 0.9) 360deg);
+  animation: radarRotate 2.5s linear infinite;
+}
+
+@keyframes radarRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1200%); }
+}
+
+.animate-scanline {
+  animation: scanline 2s ease-in-out infinite;
+}
+
+/* Control Console CRT Visual Overlay Styles */
+@keyframes crtFlicker {
+  0% { opacity: 0.985; }
+  3% { opacity: 0.95; }
+  6% { opacity: 0.99; }
+  18% { opacity: 0.97; }
+  22% { opacity: 1; }
+  45% { opacity: 0.975; }
+  48% { opacity: 0.99; }
+  72% { opacity: 0.96; }
+  75% { opacity: 0.995; }
+  89% { opacity: 0.97; }
+  100% { opacity: 0.985; }
+}
+
+.crt-flicker-active {
+  animation: crtFlicker 0.18s steps(2, start) infinite;
+}
+
+@keyframes crtBeamSweep {
+  0% { transform: translateY(-120px); opacity: 0.3; }
+  50% { opacity: 0.5; }
+  100% { transform: translateY(105vh); opacity: 0.3; }
+}
+
+.crt-beam-active {
+  animation: crtBeamSweep 9s linear infinite;
+}
+
+/* Subtle High-Density CRT Scanlines */
+.crt-scanlines-pattern {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.32) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0.015),
+    rgba(0, 255, 102, 0.005),
+    rgba(255, 0, 85, 0.015)
+  );
+  background-size: 100% 3px, 4px 100%;
+}
+
+/* CRT Screen Vignette & Curved Bezel Reflection */
+.crt-vignette-effect {
+  box-shadow: 
+    inset 0 0 100px rgba(0, 0, 0, 0.85),
+    inset 0 0 20px rgba(0, 0, 0, 0.95);
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.45) 85%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+}
+
+@keyframes noiseJitter {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-1px, 1px); }
+  30% { transform: translate(1px, -1px); }
+  45% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  75% { transform: translate(0px, -1px); }
+  90% { transform: translate(-1px, 0px); }
+}
+
+.crt-noise-jitter {
+  animation: noiseJitter 0.2s steps(2, start) infinite;
+}
+
+/* Technical Corner Markers */
+.corner-marker-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00f0ff;
+  border-left: 2px solid #00f0ff;
+}
+
+.corner-marker-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00f0ff;
+  border-right: 2px solid #00f0ff;
+}
+
+.corner-marker-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #00f0ff;
+  border-left: 2px solid #00f0ff;
+}
+
+.corner-marker-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #00f0ff;
+  border-right: 2px solid #00f0ff;
+}
+
+/* Vision Filter Shaders */
+.vision-filter-sobel {
+  filter: contrast(350%) invert(100%) grayscale(100%) drop-shadow(0 0 3px #00f0ff);
+}
+
+.vision-filter-thermal {
+  filter: invert(100%) hue-rotate(180deg) saturate(350%) contrast(160%);
+}
+
+.vision-filter-specular {
+  filter: contrast(280%) brightness(140%) drop-shadow(0 0 6px #ff0055);
+}
+
+/* Custom technical scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #00f0ff;
+  box-shadow: 0 0 5px #00f0ff;
+}

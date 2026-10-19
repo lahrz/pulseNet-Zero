@@ -1,0 +1,8 @@
+{
+  "name": "PULSENET-ZERO | AI Quality Inspection for the Small Factory",
+  "description": "Zero-shot edge AI optical anomaly detection and quality inspection for small-batch manufacturers and micro-MSMEs.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
