@@ -106,8 +106,8 @@ export const TeachNewDefectPage: React.FC<TeachNewDefectPageProps> = ({
             <h1 className="text-2xl sm:text-4xl font-black text-white tracking-wider uppercase">
               TEACH ME A NEW DEFECT
             </h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Zero-retraining defect absorption. When the factory produces an unprecedented defect, teach the system immediately without retraining downtime or data scientists.
+            <p className="text-xs text-zinc-300 mt-1">
+              1-click defect absorption. Teach unknown anomalies on-the-fly with zero retraining lag.
             </p>
           </div>
           <div className="px-3 py-1 bg-black border border-[#ffb703] text-[#ffb703] text-xs font-bold shadow-[0_0_10px_rgba(255,183,3,0.3)]">

@@ -101,13 +101,16 @@ export const TeachModelPage: React.FC<TeachModelPageProps> = ({
           &gt;&gt; &ldquo;Show PulseNet-Zero what a normal part looks like.&rdquo;
         </p>
 
-        {/* Prototype Normality Note Required by Prompt */}
-        <div className="p-3 bg-black border border-zinc-800 text-xs text-zinc-400 flex items-start gap-3 font-mono">
-          <Info className="w-4 h-4 text-[#00f0ff] shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-white font-bold">[PROTOTYPE NORMALITY WORKFLOW]: </strong>
-            Rather than requiring thousands of defect photographs, PulseNet-Zero extracts boundary tensors directly from a small cluster of verified good parts. This enables micro-MSMEs to commission inspection for custom 50-piece batches in minutes.
+        {/* Compact Normality Note */}
+        <div className="p-2.5 bg-black border border-zinc-800 text-xs text-zinc-300 flex flex-wrap items-center justify-between gap-2 font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-[#00f0ff]"></span>
+            <span className="text-[#00f0ff] font-bold">[NORMALITY WORKFLOW]:</span>
+            <span className="text-zinc-300">Learns boundary tensors from 8 good parts. Zero defect photos needed.</span>
           </div>
+          <span className="px-2 py-0.5 bg-black border border-[#00ff66] text-[#00ff66] text-[10px] font-bold">
+            &lt; 5 MIN COMMISSIONING
+          </span>
         </div>
       </div>
 

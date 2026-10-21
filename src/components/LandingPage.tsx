@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Play, 
   Sparkles, 
@@ -13,7 +13,12 @@ import {
   Gauge,
   Zap,
   Terminal,
-  Activity
+  Activity,
+  DollarSign,
+  BarChart2,
+  ChevronRight,
+  Sliders,
+  Check
 } from 'lucide-react';
 import { industrialAudio } from '../utils/audio';
 import { generateGearSvg } from '../utils/partSVGs';
@@ -28,6 +33,8 @@ interface LandingPageProps {
   activeProfile: string;
 }
 
+type HomeTab = 'dashboard' | 'telemetry' | 'architecture' | 'roi';
+
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartInspection,
   onLaunchJudgeDemo,
@@ -35,284 +42,512 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   setIsOffline,
   activeProfile,
 }) => {
+  const [activeHomeTab, setActiveHomeTab] = useState<HomeTab>('dashboard');
   const previewGear = `data:image/svg+xml;utf8,${encodeURIComponent(generateGearSvg('NORMAL'))}`;
 
+  const handleTabChange = (tab: HomeTab) => {
+    industrialAudio.playClick();
+    setActiveHomeTab(tab);
+  };
+
+  const tabs: Array<{ id: HomeTab; label: string; icon: any; short: string }> = [
+    { id: 'dashboard', label: 'Dashboard & Launch', icon: Crosshair, short: '01. DASHBOARD' },
+    { id: 'telemetry', label: 'System Telemetry', icon: Activity, short: '02. TELEMETRY' },
+    { id: 'architecture', label: 'Core Architecture', icon: Layers, short: '03. ARCHITECTURE' },
+    { id: 'roi', label: 'MSME ROI & Impact', icon: DollarSign, short: '04. MSME ROI' },
+  ];
+
   return (
-    <div className="space-y-10 pb-16 font-mono">
-      {/* Hero Section — Stark Control Console */}
-      <section className="relative overflow-hidden rounded-lg bg-black border border-cyan-500/50 p-6 md:p-10 console-grid shadow-[0_0_50px_rgba(0,240,255,0.12)]">
-        {/* Technical Corner Brackets */}
+    <div className="space-y-5 pb-16 font-mono">
+      {/* High-Density User-Friendly Home Screen Tab Navigation Bar */}
+      <div className="relative bg-black border border-cyan-500/60 p-2 shadow-[0_0_20px_rgba(0,240,255,0.12)]">
         <div className="corner-marker-tl"></div>
         <div className="corner-marker-tr"></div>
         <div className="corner-marker-bl"></div>
         <div className="corner-marker-br"></div>
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Left Column: Brand & Copy */}
-          <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-black border border-cyan-400 text-xs font-mono text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.3)]">
-              <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-pulse"></span>
-              <span className="font-bold tracking-widest">[ZERO-SHOT OPTICAL ANOMALY ENGINE // v2.4]</span>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Section Indicator */}
+          <div className="flex items-center gap-2 px-2 text-xs font-bold text-[#00f0ff]">
+            <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-pulse"></span>
+            <span className="hidden sm:inline">[COMMAND CONSOLE]:</span>
+            <span className="text-zinc-400 text-[11px]">SELECT CONSOLE VIEW</span>
+          </div>
 
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white uppercase font-mono">
-                PULSENET<span className="text-[#00f0ff] neon-text-cyan">-ZERO</span>
-              </h1>
-              <p className="text-xl sm:text-2xl font-bold text-slate-100 font-mono tracking-wide">
-                AI Quality Inspection for the Small Factory
-              </p>
-              <div className="inline-block px-3 py-1 rounded-sm bg-black border border-cyan-500/80 text-[#00f0ff] text-xs font-bold tracking-wider">
-                &ldquo;AFFORDABLE. DATA-EFFICIENT. OFFLINE-READY.&rdquo;
+          {/* Interactive Tab Buttons */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeHomeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center justify-center sm:justify-start gap-1.5 px-3 py-1.5 text-xs font-bold tracking-wider transition-all border ${
+                    isActive
+                      ? 'bg-black text-[#00f0ff] border-[#00f0ff] shadow-[0_0_12px_rgba(0,240,255,0.3)]'
+                      : 'bg-black text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#00f0ff]' : 'text-zinc-500'}`} />
+                  <span className="text-[11px] font-bold">{tab.short}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* TAB 1: DASHBOARD & QUICK LAUNCH (Compact, punchy, zero wall-of-text)     */}
+      {/* ========================================================================= */}
+      {activeHomeTab === 'dashboard' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          <section className="relative overflow-hidden bg-black border border-cyan-500/60 p-5 md:p-7 console-grid shadow-[0_0_35px_rgba(0,240,255,0.12)]">
+            <div className="corner-marker-tl"></div>
+            <div className="corner-marker-tr"></div>
+            <div className="corner-marker-bl"></div>
+            <div className="corner-marker-br"></div>
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left Column: Compact Brand & Direct Actions */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-black border border-cyan-400 text-[#00f0ff] font-bold text-[10px] tracking-widest shadow-[0_0_8px_rgba(0,240,255,0.3)]">
+                    [ZERO-SHOT AOI v2.4]
+                  </span>
+                  <span className="px-2 py-0.5 bg-black border border-zinc-800 text-zinc-400 text-[10px]">
+                    TARGET: MSME QUALITY TRACK
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white uppercase">
+                    PULSENET<span className="text-[#00f0ff] neon-text-cyan">-ZERO</span>
+                  </h1>
+                  <p className="text-base sm:text-lg font-bold text-zinc-300">
+                    AI Visual Inspection for the Small Factory
+                  </p>
+                </div>
+
+                {/* Compact Scannable Spec Badges (Replaces long paragraphs of theory) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                  <div className="p-2 bg-black border border-cyan-500/40">
+                    <div className="text-[10px] text-zinc-500 font-bold">HARDWARE CAPEX</div>
+                    <div className="text-sm font-bold text-[#00f0ff] mt-0.5">$0 (USB Cam)</div>
+                  </div>
+                  <div className="p-2 bg-black border border-emerald-500/40">
+                    <div className="text-[10px] text-zinc-500 font-bold">GOLDEN SAMPLES</div>
+                    <div className="text-sm font-bold text-[#00ff66] mt-0.5">8 Normal Only</div>
+                  </div>
+                  <div className="p-2 bg-black border border-amber-500/40">
+                    <div className="text-[10px] text-zinc-500 font-bold">EDGE LATENCY</div>
+                    <div className="text-sm font-bold text-[#ffb703] mt-0.5">&lt; 15ms Frame</div>
+                  </div>
+                  <div className="p-2 bg-black border border-zinc-800">
+                    <div className="text-[10px] text-zinc-500 font-bold">CONNECTIVITY</div>
+                    <div className="text-sm font-bold text-white mt-0.5">100% Offline</div>
+                  </div>
+                </div>
+
+                {/* Primary User-Friendly CTAs */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      industrialAudio.playClick();
+                      onStartInspection();
+                    }}
+                    className="flex items-center gap-2.5 px-5 py-2.5 bg-[#00f0ff] hover:bg-cyan-300 text-black font-black text-xs tracking-wider transition-all shadow-[0_0_20px_rgba(0,240,255,0.45)] group"
+                  >
+                    <span>[START INSPECTION]</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform stroke-[3]" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      industrialAudio.playAlert();
+                      onLaunchJudgeDemo();
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-zinc-900 text-[#ffb703] border border-[#ffb703] font-bold text-xs tracking-wider transition-all shadow-[0_0_12px_rgba(255,183,3,0.3)]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#ffb703]" />
+                    <span>[JUDGE DEMO]</span>
+                  </button>
+                </div>
+
+                {/* Quick sub-tab shortcuts */}
+                <div className="pt-2 flex flex-wrap items-center gap-2 text-[10px] text-zinc-400">
+                  <span className="text-zinc-600">// JUMP TO:</span>
+                  <button 
+                    onClick={() => handleTabChange('telemetry')} 
+                    className="hover:text-[#00f0ff] underline underline-offset-2"
+                  >
+                    System Telemetry →
+                  </button>
+                  <span className="text-zinc-700">•</span>
+                  <button 
+                    onClick={() => handleTabChange('architecture')} 
+                    className="hover:text-[#00f0ff] underline underline-offset-2"
+                  >
+                    Core Architecture →
+                  </button>
+                  <span className="text-zinc-700">•</span>
+                  <button 
+                    onClick={() => handleTabChange('roi')} 
+                    className="hover:text-[#00f0ff] underline underline-offset-2"
+                  >
+                    MSME ROI & Impact →
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Specimen Viewer & Live Status */}
+              <div className="lg:col-span-5 space-y-3">
+                <div className="relative bg-black border border-cyan-400/80 p-3 overflow-hidden shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+                  <div className="corner-marker-tl"></div>
+                  <div className="corner-marker-tr"></div>
+                  <div className="corner-marker-bl"></div>
+                  <div className="corner-marker-br"></div>
+
+                  <div className="flex items-center justify-between text-[10px] text-zinc-300 px-1 pb-1.5 border-b border-zinc-800">
+                    <span className="flex items-center gap-1 text-[#00f0ff] font-bold">
+                      <Crosshair className="w-3 h-3" />
+                      OPTICAL SPECIMEN SENSOR
+                    </span>
+                    <span className="text-[#00ff66] font-bold">60.0 FPS // 12.4MS</span>
+                  </div>
+
+                  <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center my-2 border border-zinc-900">
+                    <img 
+                      src={previewGear} 
+                      alt="Precision Gear Preview" 
+                      className="w-full h-full object-contain p-2"
+                    />
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <div className="w-32 h-32 rounded-full border border-cyan-400/25"></div>
+                      <div className="w-48 h-48 rounded-full border border-cyan-400/15"></div>
+                    </div>
+                    <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-[#00f0ff]/15 to-transparent h-12 animate-scanline"></div>
+                  </div>
+
+                  <div className="bg-black border border-emerald-500/80 p-2 flex items-center justify-between text-xs shadow-[0_0_10px_rgba(0,255,102,0.15)]">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#00ff66]" />
+                      <span className="text-[#00ff66] font-bold text-[11px]">[GOLDEN SPECIMEN MATCH]</span>
+                    </div>
+                    <span className="text-white font-bold text-[11px]">98.4% CONF</span>
+                  </div>
+                </div>
+
+                {/* Compact Engine Status Bar */}
+                <div className="p-3 bg-black border border-zinc-800 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-500 text-[10px]">[PROFILE]:</span>
+                    <span className="text-white font-bold text-xs truncate max-w-[140px]">{activeProfile}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <OnlineOfflineToggle isOffline={isOffline} setIsOffline={setIsOffline} compact />
+                  </div>
+                </div>
               </div>
             </div>
+          </section>
+        </div>
+      )}
 
-            <p className="text-sm text-slate-300 max-w-xl leading-relaxed font-mono">
-              Traditional AOI setups cost $10,000+ and require massive defect photo datasets. 
-              <span className="text-white font-bold"> PulseNet-Zero</span> operates on consumer webcams, learns normality from 8 golden samples, and executes zero-shot edge inference in under 15ms.
-            </p>
-
-            <div className="border-l-2 border-[#00f0ff] pl-3 py-1 text-xs text-cyan-200 bg-cyan-950/20 font-mono">
-              &gt;&gt; &ldquo;Learn from what you have — not what you don&apos;t.&rdquo;
+      {/* ========================================================================= */}
+      {/* TAB 2: SYSTEM TELEMETRY & RESOURCES (Separated into clean tab)            */}
+      {/* ========================================================================= */}
+      {activeHomeTab === 'telemetry' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div>
+              <h2 className="text-xs font-bold text-[#00f0ff] uppercase tracking-wider flex items-center gap-1.5">
+                <Activity className="w-4 h-4 text-[#00f0ff]" />
+                [SYSTEM TELEMETRY & HARDWARE RESOURCE MONITOR]
+              </h2>
+              <p className="text-[10px] text-zinc-400">Live edge NPU/GPU load, memory ring buffer, and optical sensor diagnostics.</p>
             </div>
+            <span className="text-[10px] text-[#00ff66] border border-[#00ff66] px-2 py-0.5 font-bold">
+              ● REAL-TIME STREAMING
+            </span>
+          </div>
 
-            {/* High-Contrast CTAs */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+          <SystemResourceMonitor isOffline={isOffline} />
+
+          <div className="p-3 bg-black border border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="text-zinc-400 text-[11px]">Local browser tensor operations running via WebAssembly & WebGPU.</span>
+            <div className="flex gap-2">
               <button
-                onClick={() => {
-                  industrialAudio.playClick();
-                  onStartInspection();
-                }}
-                className="flex items-center gap-3 px-6 py-3 rounded bg-[#00f0ff] hover:bg-cyan-300 text-black font-black font-mono tracking-widest transition-all shadow-[0_0_25px_rgba(0,240,255,0.5)] group"
+                onClick={() => handleTabChange('dashboard')}
+                className="px-2.5 py-1 bg-black border border-zinc-700 hover:border-[#00f0ff] text-zinc-300 text-[10px] font-bold"
               >
-                <span>[START INSPECTION]</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform stroke-[3]" />
+                ← Return to Dashboard
               </button>
-
               <button
-                onClick={() => {
-                  industrialAudio.playAlert();
-                  onLaunchJudgeDemo();
-                }}
-                className="flex items-center gap-3 px-6 py-3 rounded bg-black hover:bg-slate-900 text-amber-300 border border-amber-400 font-bold font-mono tracking-widest transition-all shadow-[0_0_15px_rgba(255,183,3,0.3)]"
+                onClick={() => handleTabChange('architecture')}
+                className="px-2.5 py-1 bg-black border border-[#00f0ff] text-[#00f0ff] text-[10px] font-bold"
               >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>[JUDGE DEMO]</span>
+                View Architecture Pillars →
               </button>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Right Column: Live Interactive Specimen Preview & System Status */}
-          <div className="lg:col-span-5 space-y-4">
-            {/* Specimen Viewer Frame */}
-            <div className="relative rounded bg-black border border-cyan-400/80 p-3 overflow-hidden shadow-[0_0_20px_rgba(0,240,255,0.15)]">
-              {/* Corner brackets */}
+      {/* ========================================================================= */}
+      {/* TAB 3: CORE ARCHITECTURE PILLARS (Reduced theory, concise scannable cards) */}
+      {/* ========================================================================= */}
+      {activeHomeTab === 'architecture' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div>
+              <h2 className="text-xs font-bold text-[#00f0ff] uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-[#00f0ff]" />
+                [ARCHITECTURE MATRIX // THREE CORE PILLARS]
+              </h2>
+              <p className="text-[10px] text-zinc-400">Core engineering breakthroughs enabling zero-shot quality inspection.</p>
+            </div>
+            <span className="text-[10px] text-zinc-400 border border-zinc-800 px-2 py-0.5">
+              SPEC: ZERO-SHOT v2.4
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Pillar 1 */}
+            <div className="relative bg-black border border-cyan-500/60 p-4 space-y-3 shadow-[0_0_15px_rgba(0,240,255,0.08)]">
               <div className="corner-marker-tl"></div>
               <div className="corner-marker-tr"></div>
               <div className="corner-marker-bl"></div>
               <div className="corner-marker-br"></div>
 
-              {/* Header HUD */}
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-300 px-2 pb-2 border-b border-cyan-900/60">
-                <span className="flex items-center gap-1 text-[#00f0ff] font-bold">
-                  <Crosshair className="w-3.5 h-3.5" />
-                  OPTICAL SENSOR FEED // FOV: 120MM
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 bg-black border border-cyan-400 flex items-center justify-center text-[#00f0ff]">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] text-cyan-400 font-bold border border-cyan-500/40 px-1.5 py-0.5">
+                  PILLAR 01
                 </span>
-                <span className="text-[#00ff66] font-bold">60.0 FPS // 12.4MS</span>
               </div>
-
-              {/* Part Visualizer */}
-              <div className="relative aspect-square w-full rounded-sm bg-black overflow-hidden flex items-center justify-center my-2 border border-cyan-950">
-                <img 
-                  src={previewGear} 
-                  alt="Precision Gear Preview" 
-                  className="w-full h-full object-contain p-2"
-                />
-                {/* Simulated Radar Reticle */}
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  <div className="w-48 h-48 rounded-full border border-cyan-400/30"></div>
-                  <div className="w-64 h-64 rounded-full border border-cyan-400/20"></div>
-                </div>
-                {/* Scanline */}
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-[#00f0ff]/20 to-transparent h-16 animate-scanline"></div>
+              <div>
+                <h3 className="text-base font-bold text-white uppercase">LOW-DATA AI</h3>
+                <p className="text-xs text-zinc-300 mt-1">Extracts boundary normality tensors directly from 8 verified good samples.</p>
               </div>
-
-              {/* Status footer pill */}
-              <div className="bg-black border border-emerald-500/80 rounded p-2.5 flex items-center justify-between text-xs font-mono shadow-[0_0_12px_rgba(0,255,102,0.2)]">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#00ff66]" />
-                  <span className="text-[#00ff66] font-bold">[GOLDEN SPECIMEN MATCH]</span>
-                </div>
-                <span className="text-white font-bold">98.4% CONF</span>
-              </div>
+              <ul className="text-[11px] text-zinc-400 space-y-1 border-t border-zinc-900 pt-2">
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00f0ff]" /> 8 samples needed (vs 5,000+ defect photos)
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00f0ff]" /> Ready for custom 50-piece job-shop runs
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00f0ff]" /> Direct CAD envelope alignment
+                </li>
+              </ul>
             </div>
 
-            {/* System Status Panel (High-Contrast Technical) */}
-            <div className="relative rounded bg-black border border-cyan-500/60 p-4 space-y-3 font-mono shadow-[0_0_20px_rgba(0,240,255,0.1)]">
+            {/* Pillar 2 */}
+            <div className="relative bg-black border border-emerald-500/60 p-4 space-y-3 shadow-[0_0_15px_rgba(0,255,102,0.08)]">
               <div className="corner-marker-tl"></div>
               <div className="corner-marker-tr"></div>
               <div className="corner-marker-bl"></div>
               <div className="corner-marker-br"></div>
 
-              <div className="text-xs text-[#00f0ff] uppercase tracking-widest font-bold border-b border-cyan-900/80 pb-1 flex items-center justify-between">
-                <span>[SYSTEM TELEMETRY CONSOLE]</span>
-                <Activity className="w-3.5 h-3.5 text-[#00f0ff] animate-pulse" />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <div className="p-2.5 rounded bg-black border border-emerald-500/60">
-                  <div className="text-[10px] text-slate-400 mb-0.5">ENGINE STATUS</div>
-                  <div className="flex items-center gap-1.5 text-[#00ff66] font-black">
-                    <span className="w-2 h-2 rounded-full bg-[#00ff66] animate-pulse"></span>
-                    READY
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 bg-black border border-emerald-400 flex items-center justify-center text-[#00ff66]">
+                  <WifiOff className="w-4 h-4" />
                 </div>
+                <span className="text-[10px] text-emerald-400 font-bold border border-emerald-500/40 px-1.5 py-0.5">
+                  PILLAR 02
+                </span>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white uppercase">EDGE-FIRST</h3>
+                <p className="text-xs text-zinc-300 mt-1">Zero cloud requirement. Local inference protects CAD secrets and works offline.</p>
+              </div>
+              <ul className="text-[11px] text-zinc-400 space-y-1 border-t border-zinc-900 pt-2">
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00ff66]" /> Sub-15ms local frame evaluation
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00ff66]" /> Zero cloud packet transmission
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#00ff66]" /> Uninterrupted workshop operation
+                </li>
+              </ul>
+            </div>
 
-                <div className="p-2.5 rounded bg-black border border-cyan-500/60">
-                  <div className="text-[10px] text-slate-400 mb-0.5">PIPELINE</div>
-                  <div className={`font-black ${isOffline ? 'text-[#ffb703]' : 'text-[#00f0ff]'}`}>
-                    {isOffline ? 'EDGE / WASM' : 'HYBRID GEMINI'}
-                  </div>
+            {/* Pillar 3 */}
+            <div className="relative bg-black border border-amber-500/60 p-4 space-y-3 shadow-[0_0_15px_rgba(255,183,3,0.08)]">
+              <div className="corner-marker-tl"></div>
+              <div className="corner-marker-tr"></div>
+              <div className="corner-marker-bl"></div>
+              <div className="corner-marker-br"></div>
+
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 bg-black border border-amber-400 flex items-center justify-center text-[#ffb703]">
+                  <Sparkles className="w-4 h-4" />
                 </div>
+                <span className="text-[10px] text-amber-400 font-bold border border-amber-500/40 px-1.5 py-0.5">
+                  PILLAR 03
+                </span>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white uppercase">ADAPTIVE</h3>
+                <p className="text-xs text-zinc-300 mt-1">1-click defect absorption. Teach unknown anomalies on-the-fly without downtime.</p>
+              </div>
+              <ul className="text-[11px] text-zinc-400 space-y-1 border-t border-zinc-900 pt-2">
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#ffb703]" /> Instant operator classification
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#ffb703]" /> Zero model retraining lag
+                </li>
+                <li className="flex items-center gap-1.5 text-zinc-300">
+                  <Check className="w-3 h-3 text-[#ffb703]" /> Zero data scientists required
+                </li>
+              </ul>
+            </div>
+          </div>
 
-                <div className="p-2.5 rounded bg-black border border-slate-700">
-                  <div className="text-[10px] text-slate-400 mb-0.5">ACTIVE PROFILE</div>
-                  <div className="text-white font-bold truncate">
-                    GEAR-M12
-                  </div>
+          <div className="flex justify-between items-center pt-2">
+            <button
+              onClick={() => handleTabChange('dashboard')}
+              className="px-3 py-1 bg-black border border-zinc-700 hover:border-[#00f0ff] text-zinc-300 text-xs font-bold"
+            >
+              ← Back to Dashboard
+            </button>
+            <button
+              onClick={() => handleTabChange('roi')}
+              className="px-3 py-1 bg-black border border-[#00f0ff] text-[#00f0ff] text-xs font-bold"
+            >
+              Next: MSME ROI & Impact →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: MSME ROI & FACTORY REALITY (Clean comparative matrix)              */}
+      {/* ========================================================================= */}
+      {activeHomeTab === 'roi' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div>
+              <h2 className="text-xs font-bold text-[#00f0ff] uppercase tracking-wider flex items-center gap-1.5">
+                <DollarSign className="w-4 h-4 text-[#00f0ff]" />
+                [MSME ROI & ECONOMIC DISPARITY RESOLUTION]
+              </h2>
+              <p className="text-[10px] text-zinc-400">Democratizing automated optical inspection for tier-2/3 machine workshops.</p>
+            </div>
+            <span className="text-[10px] text-[#00ff66] border border-[#00ff66] px-2 py-0.5 font-bold">
+              100% OPEX/CAPEX SAVINGS
+            </span>
+          </div>
+
+          {/* Side-by-Side Comparison Matrix */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Traditional AOI */}
+            <div className="p-4 bg-black border border-rose-500/40 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-rose-400">
+                <span>[TRADITIONAL INDUSTRIAL AOI]</span>
+                <span>LEGACY</span>
+              </div>
+              <div className="space-y-2 text-xs text-zinc-400">
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Hardware CapEx:</span>
+                  <span className="text-rose-400 font-bold">$10,000 — $50,000</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Training Data:</span>
+                  <span className="text-rose-400 font-bold">5,000+ Defect Photos</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Deployment Time:</span>
+                  <span className="text-zinc-300 font-bold">2 — 6 Weeks</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Expertise Needed:</span>
+                  <span className="text-zinc-300 font-bold">Machine Vision Specialist</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span>Cloud Reliance:</span>
+                  <span className="text-rose-400 font-bold">Mandatory (Vulnerable)</span>
                 </div>
               </div>
+            </div>
 
-              {/* In-place Online / Offline Mode Switcher */}
-              <div className="pt-2 border-t border-cyan-900/60">
-                <OnlineOfflineToggle isOffline={isOffline} setIsOffline={setIsOffline} />
+            {/* PulseNet-Zero */}
+            <div className="p-4 bg-black border border-cyan-400 space-y-3 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+              <div className="flex items-center justify-between text-xs font-bold text-[#00f0ff]">
+                <span>[PULSENET-ZERO]</span>
+                <span className="text-[#00ff66]">MSME OPTIMIZED</span>
+              </div>
+              <div className="space-y-2 text-xs text-zinc-300">
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Hardware CapEx:</span>
+                  <span className="text-[#00f0ff] font-bold">$0 (Standard USB/Webcam)</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Training Data:</span>
+                  <span className="text-[#00ff66] font-bold">8 Good Parts Only</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Deployment Time:</span>
+                  <span className="text-[#00f0ff] font-bold">&lt; 5 Minutes</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-zinc-900">
+                  <span>Expertise Needed:</span>
+                  <span className="text-[#00ff66] font-bold">Line Operator</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span>Cloud Reliance:</span>
+                  <span className="text-[#00ff66] font-bold">100% Offline Capable</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Real-Time System Resource Monitor Widget (GPU/NPU, Thermal, Buffer) */}
-      <section>
-        <SystemResourceMonitor isOffline={isOffline} />
-      </section>
-
-      {/* Three Core Feature Cards (High-Contrast Neon Wireframes) */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between border-b border-cyan-900/60 pb-2">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-[#00f0ff] font-bold">
-            // ARCHITECTURE MATRIX // CORE PILLARS
-          </h2>
-          <span className="text-xs font-mono text-[#00ff66] font-bold">[ZERO-SHOT ADVANTAGE ACTIVE]</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Card 1: LOW-DATA AI */}
-          <div className="group relative rounded bg-black border border-cyan-500/60 hover:border-[#00f0ff] p-6 space-y-4 shadow-[0_0_15px_rgba(0,240,255,0.08)] hover:shadow-[0_0_25px_rgba(0,240,255,0.25)] transition-all">
-            <div className="corner-marker-tl"></div>
-            <div className="corner-marker-tr"></div>
-            <div className="corner-marker-bl"></div>
-            <div className="corner-marker-br"></div>
-
-            <div className="w-10 h-10 rounded bg-black border border-cyan-400 flex items-center justify-center text-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.4)]">
-              <Layers className="w-5 h-5" />
+          {/* Quick Metrics Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div className="p-3 bg-black border border-cyan-400">
+              <div className="text-2xl font-black text-[#00f0ff]">$0</div>
+              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">CAPEX REQUIRED</div>
             </div>
-            <div>
-              <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">[PILLAR 01]</div>
-              <h3 className="text-lg font-black text-white font-mono tracking-wide uppercase mt-0.5">
-                LOW-DATA AI
-              </h3>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed font-mono">
-                Learns standard part geometry from 8 golden samples. Micro-MSMEs produce small batches and possess zero historical defect databases.
-              </p>
+            <div className="p-3 bg-black border border-emerald-400">
+              <div className="text-2xl font-black text-[#00ff66]">&lt;15ms</div>
+              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">EDGE INFERENCE</div>
             </div>
-            <div className="pt-2 text-xs font-mono text-[#00f0ff] font-bold flex items-center gap-1">
-              <span>&gt;&gt; 8 SAMPLES NEEDED</span>
+            <div className="p-3 bg-black border border-amber-400">
+              <div className="text-2xl font-black text-[#ffb703]">8</div>
+              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">SAMPLES NEEDED</div>
+            </div>
+            <div className="p-3 bg-black border border-zinc-700">
+              <div className="text-2xl font-black text-white">99.2%</div>
+              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">DEFECT SENSITIVITY</div>
             </div>
           </div>
 
-          {/* Card 2: EDGE-FIRST */}
-          <div className="group relative rounded bg-black border border-emerald-500/60 hover:border-[#00ff66] p-6 space-y-4 shadow-[0_0_15px_rgba(0,255,102,0.08)] hover:shadow-[0_0_25px_rgba(0,255,102,0.25)] transition-all">
-            <div className="corner-marker-tl"></div>
-            <div className="corner-marker-tr"></div>
-            <div className="corner-marker-bl"></div>
-            <div className="corner-marker-br"></div>
-
-            <div className="w-10 h-10 rounded bg-black border border-emerald-400 flex items-center justify-center text-[#00ff66] shadow-[0_0_10px_rgba(0,255,102,0.4)]">
-              <WifiOff className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">[PILLAR 02]</div>
-              <h3 className="text-lg font-black text-white font-mono tracking-wide uppercase mt-0.5">
-                EDGE-FIRST
-              </h3>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed font-mono">
-                Zero cloud reliance. Sub-15ms local WebGPU/Wasm frame inference protects workshop CAD secrecy and survives internet dropouts.
-              </p>
-            </div>
-            <div className="pt-2 text-xs font-mono text-[#00ff66] font-bold flex items-center gap-1">
-              <span>&gt;&gt; &lt;15MS EVALUATION</span>
-            </div>
-          </div>
-
-          {/* Card 3: ADAPTIVE */}
-          <div className="group relative rounded bg-black border border-amber-500/60 hover:border-[#ffb703] p-6 space-y-4 shadow-[0_0_15px_rgba(255,183,3,0.08)] hover:shadow-[0_0_25px_rgba(255,183,3,0.25)] transition-all">
-            <div className="corner-marker-tl"></div>
-            <div className="corner-marker-tr"></div>
-            <div className="corner-marker-bl"></div>
-            <div className="corner-marker-br"></div>
-
-            <div className="w-10 h-10 rounded bg-black border border-amber-400 flex items-center justify-center text-[#ffb703] shadow-[0_0_10px_rgba(255,183,3,0.4)]">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">[PILLAR 03]</div>
-              <h3 className="text-lg font-black text-white font-mono tracking-wide uppercase mt-0.5">
-                ADAPTIVE
-              </h3>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed font-mono">
-                Teach the system new defect classes on-the-fly. Operator identifies an unknown anomaly and the edge model registers it in 1-click.
-              </p>
-            </div>
-            <div className="pt-2 text-xs font-mono text-[#ffb703] font-bold flex items-center gap-1">
-              <span>&gt;&gt; ZERO RETRAINING LAG</span>
-            </div>
+          <div className="flex justify-between items-center pt-2">
+            <button
+              onClick={() => handleTabChange('architecture')}
+              className="px-3 py-1 bg-black border border-zinc-700 hover:border-[#00f0ff] text-zinc-300 text-xs font-bold"
+            >
+              ← Back to Architecture
+            </button>
+            <button
+              onClick={() => {
+                industrialAudio.playClick();
+                onStartInspection();
+              }}
+              className="px-4 py-1.5 bg-[#00f0ff] hover:bg-cyan-300 text-black text-xs font-black"
+            >
+              [LAUNCH INSPECTION NOW] →
+            </button>
           </div>
         </div>
-      </section>
-
-      {/* The Small Factory Reality Callout — Stark Technical Frame */}
-      <section className="relative rounded bg-black border border-cyan-500/70 p-6 md:p-8 console-grid shadow-[0_0_30px_rgba(0,240,255,0.15)]">
-        <div className="corner-marker-tl"></div>
-        <div className="corner-marker-tr"></div>
-        <div className="corner-marker-bl"></div>
-        <div className="corner-marker-br"></div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          <div className="md:col-span-8 space-y-2">
-            <div className="text-xs font-mono text-[#00f0ff] uppercase tracking-widest font-bold">
-              // DISRUPTIVE ECONOMIC DISPARITY RESOLUTION
-            </div>
-            <h4 className="text-xl sm:text-2xl font-black text-white uppercase font-mono">
-              &ldquo;Traditional machine vision is built for factories that have money and data. PulseNet-Zero is built for factories that don&apos;t.&rdquo;
-            </h4>
-            <p className="text-xs text-slate-300 font-mono">
-              Solves the Micro-SME Quality Paradox with $0 hardware CapEx, sub-15ms edge inference, and synthetic CAD perturbation.
-            </p>
-          </div>
-          <div className="md:col-span-4 flex flex-col sm:flex-row md:flex-col gap-3 justify-center">
-            <div className="p-3 rounded bg-black border border-cyan-400 text-center font-mono shadow-[0_0_12px_rgba(0,240,255,0.3)]">
-              <div className="text-3xl font-black text-[#00f0ff]">$0</div>
-              <div className="text-[10px] text-slate-300 uppercase tracking-wider font-bold">HARDWARE CAPEX</div>
-            </div>
-            <div className="p-3 rounded bg-black border border-emerald-400 text-center font-mono shadow-[0_0_12px_rgba(0,255,102,0.3)]">
-              <div className="text-3xl font-black text-[#00ff66]">&lt; 15 MS</div>
-              <div className="text-[10px] text-slate-300 uppercase tracking-wider font-bold">FRAME EVALUATION</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      )}
     </div>
   );
 };
-
