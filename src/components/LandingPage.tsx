@@ -1,23 +1,13 @@
 import React, { useState } from 'react';
 import { 
-  Play, 
   Sparkles, 
-  Cpu, 
   WifiOff, 
   Layers, 
-  ShieldCheck, 
-  AlertTriangle, 
   CheckCircle2, 
   ArrowRight,
   Crosshair,
-  Gauge,
-  Zap,
-  Terminal,
   Activity,
   DollarSign,
-  BarChart2,
-  ChevronRight,
-  Sliders,
   Check
 } from 'lucide-react';
 import { industrialAudio } from '../utils/audio';
@@ -142,11 +132,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div className="p-2 bg-black border border-amber-500/40">
                     <div className="text-[10px] text-zinc-500 font-bold">EDGE LATENCY</div>
-                    <div className="text-sm font-bold text-[#ffb703] mt-0.5">&lt; 15ms Frame</div>
+                    <div className="text-sm font-bold text-[#ffb703] mt-0.5">&lt; 15ms Target</div>
                   </div>
                   <div className="p-2 bg-black border border-zinc-800">
                     <div className="text-[10px] text-zinc-500 font-bold">CONNECTIVITY</div>
-                    <div className="text-sm font-bold text-white mt-0.5">100% Offline</div>
+                    <div className="text-sm font-bold text-white mt-0.5">Offline Ready</div>
                   </div>
                 </div>
 
@@ -214,7 +204,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <Crosshair className="w-3 h-3" />
                       OPTICAL SPECIMEN SENSOR
                     </span>
-                    <span className="text-[#00ff66] font-bold">60.0 FPS // 12.4MS</span>
+                    <span className="text-amber-400 font-bold">&lt;15MS TARGET SPEC</span>
                   </div>
 
                   <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center my-2 border border-zinc-900">
@@ -276,7 +266,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <SystemResourceMonitor isOffline={isOffline} />
 
           <div className="p-3 bg-black border border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="text-zinc-400 text-[11px]">Local browser tensor operations running via WebAssembly & WebGPU.</span>
+            <span className="text-zinc-400 text-[11px]">Proposed architecture: on-device WebAssembly/WebGPU runtime (Currently simulated demo).</span>
             <div className="flex gap-2">
               <button
                 onClick={() => handleTabChange('dashboard')}
@@ -331,7 +321,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <div>
                 <h3 className="text-base font-bold text-white uppercase">LOW-DATA AI</h3>
-                <p className="text-xs text-zinc-300 mt-1">Extracts boundary normality tensors directly from 8 verified good samples.</p>
+                <p className="text-xs text-zinc-300 mt-1">Visual reference library: 8 deterministic orientation views for operator inspection.</p>
               </div>
               <ul className="text-[11px] text-zinc-400 space-y-1 border-t border-zinc-900 pt-2">
                 <li className="flex items-center gap-1.5 text-zinc-300">
@@ -367,7 +357,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <ul className="text-[11px] text-zinc-400 space-y-1 border-t border-zinc-900 pt-2">
                 <li className="flex items-center gap-1.5 text-zinc-300">
-                  <Check className="w-3 h-3 text-[#00ff66]" /> Sub-15ms local frame evaluation
+                  <Check className="w-3 h-3 text-[#00ff66]" /> Sub-15ms latency target (Specification)
                 </li>
                 <li className="flex items-center gap-1.5 text-zinc-300">
                   <Check className="w-3 h-3 text-[#00ff66]" /> Zero cloud packet transmission
@@ -517,7 +507,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="p-3 bg-black border border-emerald-400">
               <div className="text-2xl font-black text-[#00ff66]">&lt;15ms</div>
-              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">EDGE INFERENCE</div>
+              <div className="text-[10px] text-zinc-400 uppercase font-bold mt-0.5">TARGET SPEC LATENCY</div>
             </div>
             <div className="p-3 bg-black border border-amber-400">
               <div className="text-2xl font-black text-[#ffb703]">8</div>

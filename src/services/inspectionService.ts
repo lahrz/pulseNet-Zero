@@ -1,5 +1,4 @@
 import { InspectionRecord, BatchSummary, LearnedDefectItem, PartProfile } from '../types/inspection';
-import { DEMO_SAMPLE_PARTS } from '../utils/partSVGs';
 
 // Default Golden Profiles
 export const DEFAULT_PROFILES: PartProfile[] = [
@@ -37,31 +36,39 @@ export const DEFAULT_PROFILES: PartProfile[] = [
 
 // Initial mock batch data (Batch #PNZ-042: 100 parts, 91 pass, 7 defect, 2 unknown)
 export const INITIAL_BATCH: BatchSummary = {
-  batchNumber: '#PNZ-042',
-  totalInspected: 100,
-  passCount: 91,
-  defectCount: 7,
-  unknownCount: 2,
-  yieldRate: 91.0,
-  mostCommonDefect: 'Surface Scratch',
-  qualityInsight: 'Surface scratches increased compared with the previous batch (tool insert wear detected at spindle #2).',
-  ppmDefectRate: 70000,
-  defectBreakdown: [
-    { name: 'Surface Scratch', count: 4, percentage: 57.1, color: '#f43f5e' },
-    { name: 'Micro-Crack', count: 2, percentage: 28.6, color: '#ef4444' },
-    { name: 'Radial Dent', count: 1, percentage: 14.3, color: '#fb923c' },
-  ],
-  hourlyTrend: [
-    { hour: '08:00', pass: 18, defect: 1, yield: 94.7 },
-    { hour: '09:00', pass: 20, defect: 0, yield: 100.0 },
-    { hour: '10:00', pass: 19, defect: 1, yield: 95.0 },
-    { hour: '11:00', pass: 17, defect: 3, yield: 85.0 },
-    { hour: '12:00', pass: 17, defect: 2, yield: 89.5 },
-  ],
+  batchNumber: 'ALL BATCHES',
+  totalInspected: 0,
+  passCount: 0,
+  defectCount: 0,
+  unknownCount: 0,
+  yieldRate: 0,
+  mostCommonDefect: 'None Recorded',
+  qualityInsight: 'No production inspection records recorded yet.',
+  ppmDefectRate: 0,
+  defectBreakdown: [],
+  hourlyTrend: [],
 };
 
 // Inspection Service abstraction
 export class InspectionService {
+  private sessionToken: string | null = null;
+
+  async getSessionToken(): Promise<string | null> {
+    if (this.sessionToken) return this.sessionToken;
+    if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (res.ok) {
+          const data = await res.json();
+          this.sessionToken = data.sessionToken;
+          return this.sessionToken;
+        }
+      } catch (e) {
+        // network or server offline
+      }
+    }
+    return null;
+  }
   private learnedDefects: LearnedDefectItem[] = [
     {
       id: 'def-1',
@@ -104,9 +111,11 @@ export class InspectionService {
       anomalyScore: 0.03,
       location: null,
       processingTimeMs: 14.2,
-      processingEngine: 'PulseNet Edge Kernel (WebAssembly)',
+      processingEngine: 'PulseNet Demo Preset Simulator (Canned Data)',
       observations: ['Flank concentricity nominal', 'Zero burr threshold met', 'Ra 0.78μm'],
       metrics: { surfaceRoughnessRa: '0.78 μm', edgeRunout: '0.005 mm', contourMatch: '99.2%' },
+      isSimulated: true,
+      batchId: 'DEMO-BATCH-001',
     },
     {
       id: 'PNZ-REC-099',
@@ -119,9 +128,11 @@ export class InspectionService {
       anomalyScore: 0.79,
       location: { x: 38, y: 44, width: 24, height: 18 },
       processingTimeMs: 12.8,
-      processingEngine: 'PulseNet Edge Kernel (WebAssembly)',
+      processingEngine: 'PulseNet Demo Preset Simulator (Canned Data)',
       observations: ['Linear scoring on flank tooth 4', 'Specular variance > 40%'],
       metrics: { surfaceRoughnessRa: '1.42 μm', edgeRunout: '0.038 mm', contourMatch: '87.4%' },
+      isSimulated: true,
+      batchId: 'DEMO-BATCH-001',
     },
     {
       id: 'PNZ-REC-100',
@@ -134,9 +145,11 @@ export class InspectionService {
       anomalyScore: 0.64,
       location: { x: 42, y: 55, width: 28, height: 25 },
       processingTimeMs: 15.1,
-      processingEngine: 'PulseNet Edge Kernel (WebAssembly)',
+      processingEngine: 'PulseNet Demo Preset Simulator (Canned Data)',
       observations: ['Unfamiliar dark particulate deposit', 'Deviation 3.8σ from normal profile'],
       metrics: { surfaceRoughnessRa: '1.10 μm', edgeRunout: '0.018 mm', contourMatch: '91.0%' },
+      isSimulated: true,
+      batchId: 'DEMO-BATCH-001',
     },
   ];
 
@@ -172,32 +185,44 @@ export class InspectionService {
     imageBase64: string;
     partProfile: string;
     forceOffline?: boolean;
+    allowCloudProcessing?: boolean;
+    isDemoSimulation?: boolean;
     simulatedPreset?: 'normal' | 'scratch' | 'crack' | 'dent' | 'unknown';
     partId?: string;
+    batchId?: string;
   }): Promise<InspectionRecord> {
-    const { imageBase64, partProfile, forceOffline = false, simulatedPreset, partId } = params;
+    const { imageBase64, partProfile, forceOffline = false, allowCloudProcessing = false, isDemoSimulation, simulatedPreset, partId, batchId } = params;
     const assignedPartId = partId || `PART-${Math.floor(100 + Math.random() * 900)}`;
 
     try {
+      const token = await this.getSessionToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['x-pnz-session-token'] = token;
+      }
+
       const response = await fetch('/api/inspect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           imageBase64,
           partProfile,
           forceOffline,
+          allowCloudProcessing,
+          isDemoSimulation,
           simulatedPreset,
           knownDefects: this.learnedDefects.map((d) => d.name),
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Inspection endpoint returned ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Inspection endpoint returned ${response.status}`);
       }
 
       const data = await response.json();
       const record: InspectionRecord = {
-        id: `PNZ-REC-${Date.now().toString().slice(-4)}`,
+        id: `PNZ-REC-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
         timestamp: new Date().toISOString(),
         partId: assignedPartId,
         partProfile,
@@ -211,51 +236,29 @@ export class InspectionService {
         observations: data.observations || [],
         metrics: data.metrics || { surfaceRoughnessRa: '0.80 μm', edgeRunout: '0.008 mm', contourMatch: '98.5%' },
         imageUrl: imageBase64,
+        isSimulated: Boolean(data.isSimulated ?? isDemoSimulation),
+        batchId: batchId ? batchId.trim() : (isDemoSimulation ? 'DEMO-BATCH-001' : undefined),
       };
 
       this.history.unshift(record);
       this.persist();
       return record;
-    } catch (err) {
-      console.warn('API error, switching to purely browser-local edge computer vision fallback:', err);
-      // Pure client-side browser edge fallback
-      const isDefect = simulatedPreset && simulatedPreset !== 'normal';
-      const status = simulatedPreset === 'unknown' ? 'UNKNOWN' : isDefect ? 'DEFECT' : 'PASS';
-      const record: InspectionRecord = {
-        id: `PNZ-REC-${Date.now().toString().slice(-4)}`,
-        timestamp: new Date().toISOString(),
-        partId: assignedPartId,
-        partProfile,
-        status,
-        defectType: status === 'PASS' ? null : simulatedPreset === 'scratch' ? 'Surface Scratch' : simulatedPreset === 'crack' ? 'Micro-Crack' : 'Unclassified Anomaly',
-        confidence: status === 'PASS' ? 0.985 : 0.941,
-        anomalyScore: status === 'PASS' ? 0.03 : 0.78,
-        location: status === 'PASS' ? null : { x: 40, y: 45, width: 22, height: 22 },
-        processingTimeMs: Math.floor(Math.random() * 4 + 11), // 11-15 ms sub-15ms edge inference
-        processingEngine: 'Browser Wasm Edge Kernel (Zero-Shot Local)',
-        observations: [
-          'Feature gradient tensor evaluated against 8 golden samples',
-          status === 'PASS' ? 'Within DIN 3962 Class 6 tolerance envelope' : 'Deviation detected exceeding 3.5-sigma threshold',
-        ],
-        metrics: {
-          surfaceRoughnessRa: status === 'PASS' ? '0.78 μm' : '1.38 μm',
-          edgeRunout: status === 'PASS' ? '0.006 mm' : '0.039 mm',
-          contourMatch: status === 'PASS' ? '99.1%' : '88.3%',
-        },
-        imageUrl: imageBase64,
-      };
-
-      this.history.unshift(record);
-      this.persist();
-      return record;
+    } catch (err: any) {
+      console.error('Inspection failed:', err?.message || err);
+      throw err;
     }
   }
 
-  async teachDefect(defectName: string, category: string = 'Surface Anomaly', sampleImage?: string): Promise<LearnedDefectItem> {
+    async teachDefect(defectName: string, category: string = 'Surface Anomaly', sampleImage?: string): Promise<LearnedDefectItem> {
     try {
+      const token = await this.getSessionToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['x-pnz-session-token'] = token;
+      }
       await fetch('/api/teach-defect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ defectName, category, sampleImage }),
       });
     } catch (e) {
@@ -287,12 +290,158 @@ export class InspectionService {
     return [...this.learnedDefects];
   }
 
+  async syncLearnedDefects(): Promise<LearnedDefectItem[]> {
+    try {
+      const res = await fetch('/api/learned-defects');
+      if (res.ok) {
+        const serverDefects = await res.json();
+        if (Array.isArray(serverDefects)) {
+          for (const item of serverDefects) {
+            const name = typeof item === 'string' ? item : item?.name;
+            if (name && !this.learnedDefects.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
+              this.learnedDefects.push({
+                id: (typeof item === 'object' && item?.id) || `def-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                name,
+                category: (typeof item === 'object' && item?.category) || 'Surface Anomaly',
+                addedAt: (typeof item === 'object' && item?.addedAt) || new Date().toISOString(),
+                samplesCount: (typeof item === 'object' && item?.samplesCount) || 1,
+                severity: 'MAJOR',
+                color: '#38bdf8',
+              });
+            }
+          }
+          this.persist();
+        }
+      }
+    } catch {
+      // Offline fallback: keep local storage defects
+    }
+    return this.getLearnedDefects();
+  }
+
   getHistory(): InspectionRecord[] {
     return [...this.history];
   }
 
-  getBatchAnalytics(): BatchSummary {
-    return { ...INITIAL_BATCH };
+  getBatchAnalytics(selectedBatchId?: string, includeSimulated: boolean = false): BatchSummary {
+    let records = this.history;
+    if (!includeSimulated) {
+      records = records.filter((r) => !r.isSimulated);
+    }
+
+    if (selectedBatchId && selectedBatchId !== 'ALL') {
+      records = records.filter((r) => r.batchId === selectedBatchId);
+    }
+
+    const totalInspected = records.length;
+    const passCount = records.filter((r) => r.status === 'PASS').length;
+    const defectCount = records.filter((r) => r.status === 'DEFECT').length;
+    const unknownCount = records.filter((r) => r.status === 'UNKNOWN').length;
+
+    const yieldRate = totalInspected > 0
+      ? parseFloat(((passCount / totalInspected) * 100).toFixed(1))
+      : 0;
+
+    const ppmDefectRate = totalInspected > 0
+      ? Math.round((defectCount / totalInspected) * 1_000_000)
+      : 0;
+
+    const defectMap = new Map<string, number>();
+    records
+      .filter((r) => r.status === 'DEFECT' || r.status === 'UNKNOWN')
+      .forEach((r) => {
+        const type = r.defectType || (r.status === 'UNKNOWN' ? 'Unclassified Anomaly' : 'Unspecified Defect');
+        defectMap.set(type, (defectMap.get(type) || 0) + 1);
+      });
+
+    const defectBreakdown: Array<{ name: string; count: number; percentage: number; color: string }> = [];
+    const colors = ['#f43f5e', '#ef4444', '#fb923c', '#eab308', '#a855f7'];
+    let colorIdx = 0;
+    let mostCommonDefect = 'None Recorded';
+    let maxDefectCount = 0;
+
+    const totalDefectsAndUnknown = defectCount + unknownCount;
+
+    defectMap.forEach((count, name) => {
+      const percentage = totalDefectsAndUnknown > 0
+        ? parseFloat(((count / totalDefectsAndUnknown) * 100).toFixed(1))
+        : 0;
+      defectBreakdown.push({
+        name,
+        count,
+        percentage,
+        color: colors[colorIdx % colors.length],
+      });
+      colorIdx++;
+      if (count > maxDefectCount) {
+        maxDefectCount = count;
+        mostCommonDefect = name;
+      }
+    });
+
+    defectBreakdown.sort((a, b) => b.count - a.count);
+
+    const hourMap = new Map<string, { pass: number; defect: number }>();
+    records.forEach((r) => {
+      try {
+        const date = new Date(r.timestamp);
+        const hour = `${String(date.getHours()).padStart(2, '0')}:00`;
+        const entry = hourMap.get(hour) || { pass: 0, defect: 0 };
+        if (r.status === 'PASS') {
+          entry.pass++;
+        } else {
+          entry.defect++;
+        }
+        hourMap.set(hour, entry);
+      } catch {
+        // invalid timestamp handling
+      }
+    });
+
+    const hourlyTrend = Array.from(hourMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([hour, data]) => {
+        const hTotal = data.pass + data.defect;
+        const hYield = hTotal > 0 ? parseFloat(((data.pass / hTotal) * 100).toFixed(1)) : 0;
+        return {
+          hour,
+          pass: data.pass,
+          defect: data.defect,
+          yield: hYield,
+        };
+      });
+
+    const qualityInsight = totalInspected === 0
+      ? 'No operational inspection records found. Run inspections to generate quality trends.'
+      : defectCount === 0
+      ? '100% quality compliance achieved across inspected units. Zero non-conformance detected.'
+      : `${mostCommonDefect} is the leading non-conformance flag (${maxDefectCount} occurrence${maxDefectCount > 1 ? 's' : ''}). Review station setup.`;
+
+    const batchSet = new Set<string>();
+    this.history.forEach((r) => {
+      if (r.batchId) batchSet.add(r.batchId);
+    });
+
+    const activeBatchNumber = selectedBatchId && selectedBatchId !== 'ALL'
+      ? selectedBatchId
+      : (batchSet.size > 0 ? Array.from(batchSet)[0] : 'ALL BATCHES');
+
+    return {
+      batchNumber: activeBatchNumber,
+      totalInspected,
+      passCount,
+      defectCount,
+      unknownCount,
+      yieldRate,
+      mostCommonDefect,
+      qualityInsight,
+      ppmDefectRate,
+      defectBreakdown,
+      hourlyTrend,
+      hasGenuineRecords: this.history.some((r) => !r.isSimulated),
+      isSimulatedOnly: totalInspected > 0 && records.every((r) => r.isSimulated),
+      availableBatches: Array.from(batchSet),
+    };
   }
 
   createPartProfile(name: string, sku: string, category: string): PartProfile {

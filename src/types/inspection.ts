@@ -29,6 +29,8 @@ export interface InspectionRecord {
   metrics: TechnicalMetrics;
   imageUrl?: string;
   notes?: string;
+  isSimulated?: boolean;
+  batchId?: string;
 }
 
 export interface PartProfile {
@@ -69,4 +71,7 @@ export interface BatchSummary {
   ppmDefectRate: number;
   defectBreakdown: Array<{ name: string; count: number; percentage: number; color: string }>;
   hourlyTrend: Array<{ hour: string; pass: number; defect: number; yield: number }>;
+  hasGenuineRecords?: boolean;
+  isSimulatedOnly?: boolean;
+  availableBatches?: string[];
 }

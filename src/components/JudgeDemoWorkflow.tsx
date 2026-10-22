@@ -7,15 +7,7 @@ import {
   ArrowRight, 
   ArrowLeft, 
   X, 
-  CheckCircle2, 
-  AlertTriangle, 
-  HelpCircle, 
-  WifiOff, 
-  Cpu, 
-  Crosshair,
-  Volume2,
-  Trophy,
-  Check
+  Trophy
 } from 'lucide-react';
 import { generateGearSvg } from '../utils/partSVGs';
 import { industrialAudio } from '../utils/audio';
@@ -57,7 +49,7 @@ export const JudgeDemoWorkflow: React.FC<JudgeDemoWorkflowProps> = ({
     {
       step: 2,
       title: 'Step 2: Run Inspection',
-      description: 'Executing zero-shot optical scan. Evaluating tooth flanks, root fillets, and surface reflectivity against learned 8-sample normality tensor.',
+      description: 'Demonstrating optical inspection preset. Evaluating tooth flanks, root fillets, and surface reflectivity against golden reference parameters.',
       image: normalGearUri,
       statusBadge: 'INSPECTING...',
       badgeColor: 'border-cyan-500 text-cyan-400 bg-cyan-950 animate-pulse',
@@ -151,7 +143,7 @@ export const JudgeDemoWorkflow: React.FC<JudgeDemoWorkflowProps> = ({
     {
       step: 12,
       title: 'Step 12: Reinspect Component',
-      description: 'Re-evaluating the component against the freshly updated normality and defect boundary.',
+      description: 'Re-evaluating the component with defect catalog classification and inspection criteria.',
       image: scratchGearUri,
       statusBadge: 'RE-INSPECTING...',
       badgeColor: 'border-cyan-500 text-cyan-400 bg-cyan-950 animate-pulse',
@@ -179,10 +171,10 @@ export const JudgeDemoWorkflow: React.FC<JudgeDemoWorkflowProps> = ({
     },
     {
       step: 15,
-      title: 'Step 15: Run Another Inspection (Sub-15ms Edge)',
-      description: 'Inference completes locally in 12.4 ms! $0 cloud API costs, 0s cloud latency, zero risk of leaking confidential CAD blueprints.',
+      title: 'Step 15: Run Another Inspection (Simulated Edge Preset)',
+      description: 'Demonstration simulation completes in 12.4 ms (target spec envelope). $0 cloud API costs and zero transmission in offline mode.',
       image: normalGearUri,
-      statusBadge: 'EDGE PASS // 12.4 MS',
+      statusBadge: 'DEMO PASS // ~12 MS',
       badgeColor: 'border-emerald-500 text-emerald-400 bg-emerald-950',
       confidence: '98.5%',
       anomalyScore: '0.04',
@@ -353,11 +345,11 @@ export const JudgeDemoWorkflow: React.FC<JudgeDemoWorkflowProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-xs font-mono pt-4">
                 <div className="p-4 bg-black border border-[#00ff66] shadow-[0_0_15px_rgba(0,255,102,0.15)]">
                   <div className="text-[#00ff66] font-bold mb-1">[01 // ZERO DATA BARRIER]</div>
-                  <div className="text-zinc-400">Learns normality from just 8 good parts. Eliminates the 10,000 defect image requirement.</div>
+                  <div className="text-zinc-400">Profiles reference geometry from 8 orientation views. Eliminates the 10,000 defect image requirement.</div>
                 </div>
                 <div className="p-4 bg-black border border-[#00f0ff] shadow-[0_0_15px_rgba(0,240,255,0.15)]">
                   <div className="text-[#00f0ff] font-bold mb-1">[02 // $0 HARDWARE CAPEX]</div>
-                  <div className="text-zinc-400">Runs on standard webcams, smartphones, or laptops with sub-15ms edge inference.</div>
+                  <div className="text-zinc-400">Targeted to run on standard webcams, smartphones, or laptops with sub-15ms edge inference.</div>
                 </div>
                 <div className="p-4 bg-black border border-[#ffb703] shadow-[0_0_15px_rgba(255,183,3,0.15)]">
                   <div className="text-[#ffb703] font-bold mb-1">[03 // 100% OFFLINE READY]</div>

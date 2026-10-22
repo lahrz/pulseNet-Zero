@@ -1,15 +1,12 @@
 import React from 'react';
 import { 
   Cpu, 
-  Activity, 
-  ShieldCheck, 
   Wifi, 
   WifiOff, 
   Volume2, 
   VolumeX, 
   Sparkles,
   Layers,
-  HelpCircle,
   BarChart3,
   History,
   Scan,
@@ -88,9 +85,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="hidden lg:flex items-center gap-1 text-[10px] text-slate-400">
             <span className="text-slate-600">//</span>
-            <span className="text-cyan-400 font-mono">LATENCY: &lt;15MS</span>
+            <span className="text-cyan-400 font-mono">SPEC: &lt;15MS</span>
             <span className="text-slate-600">//</span>
-            <span className="text-emerald-400 font-mono">MEM: 142MB</span>
+            <span className="text-emerald-400 font-mono">DEMO_HUD: ACTIVE</span>
             <span className="text-slate-600">//</span>
             <span className="text-[#00f0ff] font-mono flex items-center gap-1">
               <span className="w-1 h-1 bg-[#00f0ff] animate-ping"></span>

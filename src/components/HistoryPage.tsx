@@ -1,23 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  History, 
-  Search, 
-  Filter, 
-  Download, 
-  CheckCircle2, 
-  AlertTriangle, 
-  HelpCircle, 
-  Eye, 
-  Clock, 
-  Cpu,
-  X
-} from 'lucide-react';
+import { History, Search, Download, CheckCircle2, AlertTriangle, HelpCircle, Eye, X } from 'lucide-react';
 import { inspectionService } from '../services/inspectionService';
 import { InspectionRecord } from '../types/inspection';
 import { industrialAudio } from '../utils/audio';
 
 export const HistoryPage: React.FC = () => {
-  const [historyList, setHistoryList] = useState<InspectionRecord[]>(inspectionService.getHistory());
+  const [historyList] = useState<InspectionRecord[]>(() => inspectionService.getHistory());
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'PASS' | 'DEFECT' | 'UNKNOWN'>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedRecord, setSelectedRecord] = useState<InspectionRecord | null>(null);
@@ -33,26 +21,30 @@ export const HistoryPage: React.FC = () => {
 
   const exportCSV = () => {
     industrialAudio.playClick();
-    const headers = ['Time', 'Part ID', 'Part Profile', 'Result', 'Defect Type', 'Confidence', 'Processing Time (ms)', 'Engine'];
+    const headers = ['Time', 'Part ID', 'Batch ID', 'Part Profile', 'Result', 'Defect Type', 'Confidence', 'Processing Time (ms)', 'Engine', 'Mode'];
     const rows = filtered.map((r) => [
       r.timestamp,
-      r.partId,
-      `"${r.partProfile}"`,
+      `"${r.partId.replace(/"/g, '""')}"`,
+      `"${(r.batchId || 'N/A').replace(/"/g, '""')}"`,
+      `"${r.partProfile.replace(/"/g, '""')}"`,
       r.status,
-      `"${r.defectType || 'None'}"`,
+      `"${(r.defectType || 'None').replace(/"/g, '""')}"`,
       (r.confidence * 100).toFixed(1) + '%',
       r.processingTimeMs.toFixed(1),
-      `"${r.processingEngine}"`,
+      `"${r.processingEngine.replace(/"/g, '""')}"`,
+      r.isSimulated ? '"Simulated Demo"' : '"Genuine Inspection"',
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUri = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', `pulsenet_inspection_log_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(encodedUri);
   };
 
   return (
@@ -167,8 +159,19 @@ export const HistoryPage: React.FC = () => {
 
                     {/* PART */}
                     <td className="py-3.5 px-4 font-bold text-white">
-                      <div>{item.partId}</div>
-                      <div className="text-[10px] text-zinc-500 font-mono">{item.partProfile.split(' ')[0]}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span>{item.partId}</span>
+                        {item.isSimulated ? (
+                          <span className="text-[9px] px-1 py-0.2 bg-black border border-amber-500/60 text-amber-400 font-bold">
+                            [DEMO]
+                          </span>
+                        ) : (
+                          <span className="text-[9px] px-1 py-0.2 bg-black border border-cyan-500/60 text-cyan-400 font-bold">
+                            [REAL]
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-mono">{item.partProfile.split(' ')[0]}{item.batchId ? ` • Lot: ${item.batchId}` : ''}</div>
                     </td>
 
                     {/* RESULT */}
@@ -254,7 +257,13 @@ export const HistoryPage: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-2.5 bg-black border border-zinc-800">
+                <span className="text-zinc-500 text-[10px] font-bold">[INSPECTION MODE]:</span>
+                <div className={`font-bold text-xs mt-0.5 ${selectedRecord.isSimulated ? 'text-[#ffb703]' : 'text-[#00f0ff]'}`}>
+                  {selectedRecord.isSimulated ? 'Simulated Demo Preset' : 'Genuine AI Inspection'}
+                </div>
+              </div>
               <div className="p-2.5 bg-black border border-zinc-800">
                 <span className="text-zinc-500 text-[10px] font-bold">[STATUS]:</span>
                 <div className={`font-black text-sm mt-0.5 ${

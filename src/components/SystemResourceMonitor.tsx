@@ -4,14 +4,7 @@ import {
   Thermometer, 
   Activity, 
   HardDrive, 
-  Zap, 
-  RotateCcw, 
-  Flame, 
-  ShieldCheck, 
-  Gauge, 
-  Layers,
-  ArrowUpRight,
-  Sparkles
+  Zap
 } from 'lucide-react';
 import { industrialAudio } from '../utils/audio';
 
@@ -19,7 +12,7 @@ interface SystemResourceMonitorProps {
   isOffline?: boolean;
 }
 
-export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ isOffline = false }) => {
+export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ isOffline: _isOffline = false }) => {
   // Live hardware metrics
   const [gpuLoad, setGpuLoad] = useState<number>(42);
   const [thermalTemp, setThermalTemp] = useState<number>(43.2);
@@ -95,13 +88,13 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
         <div>
           <div className="flex items-center gap-2 text-xs text-[#00f0ff] font-bold">
             <Activity className="w-4 h-4 text-[#00f0ff]" />
-            <span>[HARDWARE_TELEMETRY // BUS_SPEED: 8.0 GT/s]</span>
+            <span>[SIMULATED TELEMETRY // DEMO HUD]</span>
           </div>
           <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider mt-0.5">
-            SYSTEM RESOURCE MONITOR
+            SYSTEM RESOURCE MONITOR (SIMULATED DEMO HUD)
           </h3>
           <p className="text-xs text-zinc-400">
-            Real-time NPU tensor cores, junction thermal headroom, and edge inference ring-buffer health.
+            Target hardware architecture monitor (Simulated demo HUD; live hardware telemetry not connected).
           </p>
         </div>
 
@@ -121,7 +114,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
             }`}
           >
             <Zap className="w-3.5 h-3.5 text-[#ffb703]" />
-            <span>{isStressTesting ? '[BURST_TESTING...]' : '[BURST 100 FPS]'}</span>
+            <span>{isStressTesting ? '[BURST_TESTING...]' : '[SIMULATE LOAD SPIKE]'}</span>
           </button>
         </div>
       </div>
@@ -135,7 +128,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
               <Cpu className="w-4 h-4 text-[#00f0ff]" />
               GPU / NPU COMPUTE LOAD
             </span>
-            <span className="text-[10px] text-[#00f0ff]">[WGSL_V1]</span>
+            <span className="text-[10px] text-[#00f0ff]">[SIMULATED]</span>
           </div>
 
           <div className="flex items-baseline justify-between">
@@ -145,7 +138,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
             <span className={`text-[10px] font-bold ${
               gpuLoad > 75 ? 'text-[#ffb703]' : 'text-[#00ff66]'
             }`}>
-              {gpuLoad > 75 ? '[HIGH_WORKLOAD]' : '[SUB-15MS INFERENCE]'}
+              {gpuLoad > 75 ? '[HIGH_LOAD_DEMO]' : '[SPEC_TARGET_DEMO]'}
             </span>
           </div>
 
@@ -165,7 +158,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
           <div className="space-y-1 pt-1">
             <div className="text-[10px] text-zinc-500 flex justify-between font-mono">
               <span>LOAD HISTORY (LAST 15s)</span>
-              <span className="text-zinc-400">128 SHADER LANES</span>
+              <span className="text-zinc-400">SPEC PROFILE</span>
             </div>
             <div className="h-7 flex items-end gap-1 px-1 bg-black border border-zinc-800">
               {historyTicks.map((val, idx) => (
@@ -187,7 +180,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
               <Thermometer className="w-4 h-4 text-[#00ff66]" />
               JUNCTION TEMPERATURE
             </span>
-            <span className="text-[10px] text-[#00ff66]">[PASSIVE_0dB]</span>
+            <span className="text-[10px] text-[#00ff66]">[SIMULATED]</span>
           </div>
 
           <div className="flex items-baseline justify-between">
@@ -226,7 +219,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
               <HardDrive className="w-4 h-4 text-[#00f0ff]" />
               INFERENCE RING BUFFER
             </span>
-            <span className="text-[10px] text-[#00f0ff]">[ZERO_DROP]</span>
+            <span className="text-[10px] text-[#00f0ff]">[SIMULATED]</span>
           </div>
 
           <div className="flex items-baseline justify-between">
@@ -252,7 +245,7 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
               <span className="text-[#00ff66] font-bold">{bufferQueue} / 64 frames</span>
             </div>
             <div className="flex justify-between">
-              <span>WASM Heap Allocation:</span>
+              <span>Target Runtime Memory:</span>
               <span className="text-zinc-200 font-bold">142.8 MB</span>
             </div>
           </div>
@@ -262,12 +255,12 @@ export const SystemResourceMonitor: React.FC<SystemResourceMonitorProps> = ({ is
       {/* Footer Edge Telemetry Strip */}
       <div className="flex flex-wrap items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-zinc-800 font-mono">
         <div className="flex flex-wrap items-center gap-4">
-          <span>Inference Latency: <strong className="text-[#00ff66]">&lt;15 ms</strong></span>
-          <span>Camera Direct Stream: <strong className="text-white">DMA_ENABLED</strong></span>
-          <span>Quantization: <strong className="text-[#00f0ff]">INT8 TENSOR</strong></span>
+          <span>Inference Latency: <strong className="text-[#00ff66]">Unmeasured (&lt;15ms target)</strong></span>
+          <span>Camera Stream: <strong className="text-white">WEBRTC_ACTIVE</strong></span>
+          <span>Quantization: <strong className="text-[#00f0ff]">INT8 (TARGET SPEC)</strong></span>
         </div>
         <div className="text-zinc-500 text-[10px]">
-          [CONSOLE_KERNEL: v2.4-LOCAL // SIMD_AVX2 // WebGPU]
+          [CONSOLE_KERNEL: v2.4-DEMO // SIMULATED TELEMETRY]
         </div>
       </div>
     </div>

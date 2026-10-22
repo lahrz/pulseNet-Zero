@@ -17,7 +17,10 @@ function svgToUri(svgString: string): string {
 }
 
 // Generate Precision Gear SVG with high technical detail
-export function generateGearSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DENT' | 'UNKNOWN' = 'NORMAL'): string {
+export function generateGearSvg(
+  condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DENT' | 'UNKNOWN' = 'NORMAL',
+  rotationDeg: number = 0
+): string {
   // Generate gear teeth
   const teeth = 18;
   const cx = 200;
@@ -136,6 +139,7 @@ export function generateGearSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DEN
       <circle cx="200" cy="200" r="185" fill="none" stroke-dasharray="3 3" />
     </g>
 
+    <g transform="rotate(${rotationDeg} 200 200)">
     <!-- Gear Body Shadow -->
     <path d="${pathD}" fill="#000" opacity="0.6" transform="translate(6, 8)" filter="blur(4px)" />
 
@@ -178,10 +182,11 @@ export function generateGearSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DEN
 
     <!-- Inspection condition / Defect rendering -->
     ${defectSvg}
+    </g>
 
     <!-- Optical HUD Overlay Elements -->
     <g fill="#38bdf8" font-family="monospace" font-size="9" opacity="0.65">
-      <text x="16" y="24">PULSENET-AOI // REF: GEAR-M12</text>
+      <text x="16" y="24">PULSENET-AOI // REF: GEAR-M12${rotationDeg !== 0 ? ` [ROT: ${rotationDeg}°]` : ''}</text>
       <text x="16" y="385">FOV: 120mm | CAL: 0.005mm/px</text>
       <text x="290" y="385">STATUS: ${condition}</text>
     </g>
@@ -191,7 +196,10 @@ export function generateGearSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DEN
 }
 
 // Generate CNC Flange SVG
-export function generateFlangeSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DENT' | 'UNKNOWN' = 'NORMAL'): string {
+export function generateFlangeSvg(
+  condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'DENT' | 'UNKNOWN' = 'NORMAL',
+  rotationDeg: number = 0
+): string {
   let defectSvg = '';
   if (condition === 'SCRATCH') {
     defectSvg = `
@@ -222,6 +230,7 @@ export function generateFlangeSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'D
     
     <rect width="400" height="400" fill="#070a12" />
 
+    <g transform="rotate(${rotationDeg} 200 200)">
     <!-- Shadow -->
     <circle cx="206" cy="208" r="160" fill="#000" opacity="0.5" filter="blur(5px)" />
 
@@ -249,9 +258,10 @@ export function generateFlangeSvg(condition: 'NORMAL' | 'SCRATCH' | 'CRACK' | 'D
 
     <!-- Defect -->
     ${defectSvg}
+    </g>
 
     <g fill="#38bdf8" font-family="monospace" font-size="9" opacity="0.65">
-      <text x="16" y="24">PULSENET-AOI // REF: FLANGE-ANSI-B16</text>
+      <text x="16" y="24">PULSENET-AOI // REF: FLANGE-ANSI-B16${rotationDeg !== 0 ? ` [ROT: ${rotationDeg}°]` : ''}</text>
       <text x="16" y="385">MATERIAL: 316L SS | PCD: 124mm</text>
       <text x="290" y="385">STATUS: ${condition}</text>
     </g>

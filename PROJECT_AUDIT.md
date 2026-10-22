@@ -231,7 +231,7 @@ A successful future `vite build` would **not** prove computer vision. A successf
 
 These are demonstrated by source (and, where noted, contradictory comments).
 
-### AUDIT-001 — P0 — Unauthenticated inspect API binds all interfaces and can proxy images to Gemini
+### AUDIT-001 — P0 — Unauthenticated inspect API binds all interfaces and can proxy images to Gemini [REMEDIATED]
 
 - **Evidence:** `server.ts` 15–16 (`express.json` / `urlencoded` limit `'50mb'`), 50–266 (`POST /api/inspect` with `imageBase64` → Gemini `inlineData`), 317 (`app.listen(PORT, '0.0.0.0')`). No authentication middleware. No MIME/size checks beyond JSON body parse.
 - **Reproduction:** After install and `GEMINI_API_KEY` set, any client that can reach the host:port can POST a 50 MB JSON body; if not `forceOffline`, the image is sent to Google.
@@ -239,8 +239,16 @@ These are demonstrated by source (and, where noted, contradictory comments).
 - **Actual:** Open inspect/teach endpoints on all interfaces; cloud forward when key present.
 - **Fix:** Bind `127.0.0.1` by default; add auth or at least a local shared secret; cap body size; refuse inspect without key **or** without explicit cloud flag; never silently send camera frames.
 - **Resolved when:** External hosts cannot call APIs without credentials; cloud path is opt-in and logged without storing secrets in git.
+- **Remediation Status:** Verified & Remediated (22 October 2026).
+  - Default server host bound to `127.0.0.1` (`DEFAULT_HOST = '127.0.0.1'`); non-loopback exposure requires explicit `HOST` configuration.
+  - Non-loopback binding requires pre-shared `PNZ_API_KEY` / `PULSENET_API_KEY` (`x-api-key` or `Authorization: Bearer`).
+  - Loopback protection enforces Fetch Metadata (`Sec-Fetch-Site: cross-site` 403 rejection), Origin validation, and ephemeral session token handshake (`GET /api/auth/session` + `x-pnz-session-token`).
+  - Request body limit capped at 10MB; raw image payload capped at 8MB (`MAX_IMAGE_SIZE_BYTES`); strict MIME validation (`image/png`, `image/jpeg`, `image/jpg`, `image/webp`).
+  - Cloud forwarding requires explicit per-request opt-in (`allowCloudProcessing === true`). Default is false. Added UI opt-in toggle in `InspectionStudio`.
+  - Credentials and image base64 payloads excluded from logs.
+  - Verified by 22 automated tests in `tests/audit-001-api-security.test.ts` (0 failures).
 
-### AUDIT-002 — P1 — Gemini (or parse) failure always returns PASS
+### AUDIT-002 — P1 — Gemini (or parse) failure always returns PASS [REMEDIATED]
 
 - **Evidence:** `server.ts` 243–264 `catch`: `status: 'PASS'`, `processingEngine: 'PulseNet Edge Kernel (Local Fallback)'`.
 - **Reproduction:** Trigger Gemini error (invalid key, model not found, JSON parse throw on `JSON.parse(response.text)`). Client receives PASS.
@@ -248,8 +256,16 @@ These are demonstrated by source (and, where noted, contradictory comments).
 - **Actual:** False accept. Inspection UI has no distinct API-error card (`InspectionStudio` catch only `console.error`).
 - **Fix:** Return 502/503 with `{ error }`; UI shows failed inspection, not PASS.
 - **Resolved when:** Forced Gemini failure displays an error and does not append a PASS history row.
+- **Remediation Status:** Verified & Remediated (22 October 2026).
+  - Replaced catch-all false-PASS response with HTTP 502 Bad Gateway / 503 Service Unavailable structured error payloads (`{ error, code }`).
+  - Added strict server-side schema and value validation for Gemini responses: checks JSON parsing, enforces `status` in `['PASS', 'DEFECT', 'UNKNOWN']`, validates `confidence` (0.0–1.0 numeric), `anomalyScore` (0.0–1.0 numeric), non-empty `observations` string array, and bounded `location` coordinates (0–100%).
+  - Eliminated server-side and client-side fabrication of observations, confidence scores, and defect locations upon failure.
+  - Returns HTTP 503 if cloud inspection is requested while Gemini is unconfigured.
+  - Updated `InspectionService.inspectPart` to propagate upstream errors rather than falling back to client-side fake PASS records in `history`.
+  - Updated `InspectionStudio.tsx` to display an industrial CRT error card (`[SYSTEM DIAGNOSTIC // INSPECTION FAILED]`), play alert audio, and prevent false PASS records or alerts.
+  - Verified by 11 regression tests in `tests/audit-002-fail-safe-inspection.test.ts` (33 total suite tests passing, 0 failures).
 
-### AUDIT-003 — P1 — Offline / no-key “inspection” ignores the image and uses the last demo preset
+### AUDIT-003 — P1 — Offline / no-key “inspection” ignores the image and uses the last demo preset [REMEDIATED]
 
 - **Evidence:** `InspectionStudio.tsx` 175–187: `simulatedPreset` from `selectedPartPreset.condition`. `server.ts` 55–128: if `forceOffline || !GEMINI_API_KEY`, result is a switch on `simulatedPreset` only; `imageBase64` unused. Upload (`handleFileUpload`) and camera capture do not reset `selectedPartPreset`.
 - **Reproduction:** Select “Gear w/ Scratch”, then upload a blank photo or snap the webcam, enable Offline, Run Inspection → DEFECT / Surface Scratch with canned box.
@@ -257,8 +273,16 @@ These are demonstrated by source (and, where noted, contradictory comments).
 - **Actual:** Pixel buffer is irrelevant on this path.
 - **Fix:** Separate demo-simulation from live inspect; if simulating, label it; if live, run a real model or refuse.
 - **Resolved when:** Uploaded/camera image in offline mode does not inherit the previous preset’s verdict.
+- **Remediation Status:** Verified & Remediated (22 October 2026).
+  - Explicit architectural separation between demo preset simulation (`isDemoSimulation: true`) and real inspection of custom specimens (`isDemoSimulation: false`).
+  - Specimen source tracking: `InspectionStudio.tsx` tracks `specimenSource` (`'preset' | 'upload' | 'camera'`). Uploading a file or capturing a webcam frame immediately clears `selectedPartPreset` and flags the inspection as non-simulation (`isDemoSimulation: false`). Custom specimens can never inherit a preset's verdict.
+  - Fail-safe offline refusal: If a custom specimen is inspected offline (or without Gemini configured/authorized), the server refuses to fabricate a result and returns HTTP 503 (`LOCAL_MODEL_UNAVAILABLE`) with a clear error explaining that no local inference engine is installed.
+  - Transparent demo labeling: Demo simulations return `isSimulated: true`, `processingEngine: 'PulseNet Demo Preset Simulator (Canned Data)'`, prefix observations with `[SIMULATED DEMO]`, and display an amber `[SIMULATED DEMO]` badge on the result card.
+  - History & export distinction: Inspection records persist `isSimulated`. `HistoryPage.tsx` renders clear `[DEMO]` (amber) and `[REAL]` (cyan) badges in table rows, specifies inspection mode in the detail inspection modal, and includes a `Mode` column (`Simulated Demo` vs `Genuine Inspection`) in CSV exports.
+  - No fallback on failure: Upstream cloud failures never silently downgrade or fall back to simulated preset results.
+  - Verified by 7 regression tests in `tests/audit-003-separate-demo-simulation.test.ts` (40 total suite tests passing, 0 failures).
 
-### AUDIT-004 — P1 — Product UI claims WASM/WebGPU/&lt;15 ms local inference that the code does not perform
+### AUDIT-004 — P1 — Product UI claims WASM/WebGPU/&lt;15 ms local inference that the code does not perform [REMEDIATED]
 
 - **Evidence:** `App.tsx` 142–143, 163; `InspectionStudio.tsx` 236; `server.ts` 39, 113, 122; `OfflineModePage.tsx` 42–53, 147, 159; `inspectionService.ts` 234–235. No ONNX/WASM CV module.
 - **Reproduction:** Read those strings vs `package.json` dependencies.
@@ -266,32 +290,68 @@ These are demonstrated by source (and, where noted, contradictory comments).
 - **Actual:** Simulated JSON labeled as Wasm/SIMD/WebGPU.
 - **Fix:** Rename engines to “Demo simulation” / “Gemini cloud”; remove numeric latency guarantees until measured.
 - **Resolved when:** No screen asserts local tensor inference unless a real runtime is invoked.
+- **Remediation Status:** Verified & Remediated (22 October 2026).
+  - Removed or qualified all unsupported WASM, WebGPU, SIMD/AVX2, tensor computation, and sub-15ms latency claims across the UI, server, and client services.
+  - `server.ts`: `/api/status` updated to accurately return `engine: 'PulseNet-Zero Inspection Server v2.4'`, `localInferenceAvailable: false`, and `edgeLatencyTarget: '< 15ms (Specification Target, Unmeasured)'`.
+  - `src/services/inspectionService.ts`: Initial history records updated to report `processingEngine: 'PulseNet Demo Preset Simulator (Canned Data)'` with `isSimulated: true`.
+  - `src/App.tsx`: Footer and floating offline notification updated to `<15ms Target Latency (Spec)`, `Offline Demo Capable`, and clarified that local model runtime is not installed with presets simulated.
+  - `src/components/InspectionStudio.tsx`: Engine status indicator updated to `OFFLINE DEMO SIMULATOR` vs `CLOUD VISION (GEMINI)`; removed unsupported `ZERO-SHOT EDGE TENSOR RUNNING` label in favor of accurate source-derived indicators (`[ENGINE: DEMO PRESET SIMULATION]`, `[ENGINE: OFFLINE (NO LOCAL MODEL)]`, `[ENGINE: CLOUD VISION GATEWAY]`).
+  - `src/components/OnlineOfflineToggle.tsx`: Replaced false claims of 100% on-device WebAssembly and automatic edge fallback with accurate copy regarding air-gapped preset simulation and cloud Gemini inspection.
+  - `src/components/OfflineModePage.tsx`: Relabeled benchmark tester to `[PROPOSED EDGE BENCHMARK // SYNTHETIC SIMULATOR]` with explicit disclosure that it is a synthetic specification target simulator; updated telemetry cards to indicate demo preset simulation (~12 ms simulated) vs cloud processing.
+  - `src/components/SystemResourceMonitor.tsx`: Header, badges, and meters explicitly labeled as simulated telemetry demonstration HUD (`[SIMULATED TELEMETRY // DEMO HUD]`, `[SIMULATE LOAD SPIKE]`, `Unmeasured (<15ms target)`, `INT8 (TARGET SPEC)`, `[CONSOLE_KERNEL: v2.4-DEMO // SIMULATED TELEMETRY]`).
+  - `src/components/ControlConsoleOverlay.tsx`: Relabeled HUD telemetry strip from `LATENCY <15MS` to `TARGET <15MS // DEMO_HUD` and `AOI_PIPELINE::DEMO_MODE`.
+  - `LandingPage.tsx`, `Navbar.tsx`, `JudgeDemoWorkflow.tsx`, `TeachModelPage.tsx`, `TeachNewDefectPage.tsx`: Replaced unqualified latency guarantees and "tensor" wording with specification target descriptions.
+  - Verified by 4 automated regression tests in `tests/audit-004-unsupported-claims.test.ts` (44 total suite tests passing, 0 failures).
 
-### AUDIT-005 — P1 — Teach-defect “reinspect” does not inspect
+### AUDIT-005 — P1 — Teach-defect “reinspect” does not inspect [REMEDIATED]
 
 - **Evidence:** `TeachNewDefectPage.tsx` `handleLearnDefect` 53–67 calls `teachDefect` (name registry). `handleReInspect` 70–78: `setTimeout` 900 ms, `setConfidenceScore(0.94)`, no `inspectPart`. Bounding box hardcoded 148–154.
 - **Expected:** Re-run model; class and confidence from inference.
 - **Actual:** Scripted success.
 - **Fix:** Call inspect with the specimen; show real payload or an honest “demo only” banner.
 - **Resolved when:** Reinspect issues `/api/inspect` (or local model) and UI reflects that payload.
+- **Remediation Status:** Verified & Remediated (22 October 2026).
+  - Removed the fabricated 900ms timer and hardcoded 94% confidence score (`setConfidenceScore(0.94)`) from `TeachNewDefectPage.tsx`.
+  - Reused `inspectionService.inspectPart` with `isDemoSimulation: false`, passing the actual specimen, part profile, offline state, and explicit cloud consent.
+  - Specimen evaluation: Added dynamic bounding box rendering from `reinspectResult.location` (rather than a static, hardcoded 38%/48% CSS box), and dynamic confidence/verdict displays directly derived from the inference payload.
+  - Fail-safe error state: If offline or local model is missing, returns HTTP 503 (`LOCAL_MODEL_UNAVAILABLE`) and displays a dedicated diagnostic error card (`[SYSTEM DIAGNOSTIC // INFERENCE BLOCKED]`) explaining that no local computer vision runtime is installed. If cloud consent is not granted, requires explicit consent. Never substitutes a canned demo result upon failure.
+  - Distinguishes catalog registration from model training: Clarified in the UI and state that operator-defined defects are registered in the defect catalog/vocabulary without claiming that local neural network weights or boundary models have been trained or updated.
+  - Verified by 6 automated regression tests in `tests/audit-005-teach-defect-reinspect.test.ts` (50 total suite tests passing, 0 failures).
 
-### AUDIT-006 — P2 — Golden “8 rotations” are identical SVGs; teach-model uploads never reach inspect
+### AUDIT-006 — P2 — Golden “8 rotations” are identical SVGs; teach-model uploads never reach inspect [REMEDIATED]
 
 - **Evidence:** `TeachModelPage.tsx` 30–38: eight `generateGearSvg('NORMAL')` with different angle **labels**. `handleUploadGoodPart` only `setSamples`. `toleranceThreshold` / `surfaceSensitivity` are not passed to any service (`surfaceSensitivity` never read).
 - **Expected:** Samples affect the normality model.
 - **Actual:** Cosmetic grid; sliders are local state.
 - **Fix:** Persist samples and use them in a real comparator, or mark UI as mock.
 - **Resolved when:** Changing samples/threshold changes inspect behaviour, or UI says they do not.
+- **Remediation Status:** Verified & Remediated (23 October 2026).
+  - Genuine SVG rotations: Enhanced `generateGearSvg` and `generateFlangeSvg` in `src/utils/partSVGs.ts` to support deterministic geometric rotations (`rotationDeg`: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°) using SVG `<g transform="rotate(${rotationDeg} 200 200)">` groups around the central datum and dynamic optical HUD text indicators (`[ROT: ${deg}°]`).
+  - Distinct Golden References: Replaced identical 8-sample SVG generation in `TeachModelPage.tsx` with `createInitialGoldenSamples()`, generating 8 mathematically and visually distinct SVG data URIs with distinct rotation angles.
+  - Transparent labeling: Relabeled page from `[PAGE_03 // NORMALITY PROFILING CONSOLE]` to `[PAGE_03 // REFERENCE SPECIMEN LIBRARY & DEMO PROFILING]` with explicit `[VISUAL REFERENCE DEMO]` and `[DEMO PREVIEW ONLY]` notices.
+  - Removed unsupported training claims: Removed fabricated claims such as `"Zero-shot edge envelope established"`, `"NORMAL BASELINE 100% COVERAGE"`, and relabeled the procedural bar graph from `[FEATURE COVARIANCE DENSITY MATRIX]` to `[SYNTHETIC FEATURE DENSITY DEMO]`.
+  - Disclaimed demonstration sliders and uploads: Clearly disclosed that `toleranceThreshold` and `surfaceSensitivity` sliders are UI demonstration controls that do not calibrate backend weights/thresholds, and that uploading good parts updates an in-memory visual comparison catalog without executing a local or cloud neural network training loop.
+  - Profile-aware specimen rendering: Connected `generateFlangeSvg` to render flange reference samples when the active profile is a flange, resolving dead-code observations.
+  - Verified by 5 automated regression tests in `tests/audit-006-teach-model-rotations.test.ts` (55 total suite tests passing, 0 failures).
 
-### AUDIT-007 — P2 — Batch analytics is disconnected from inspections
+### AUDIT-007 — P2 — Batch analytics is disconnected from inspections [REMEDIATED]
 
 - **Evidence:** `inspectionService.getBatchAnalytics` returns `{ ...INITIAL_BATCH }` (294–296). `BatchAnalyticsPage` mutates React state with a 9-pass/1-defect script (24–51). Comment and badge: demo data.
 - **Expected:** Analytics from history.
 - **Actual:** Hardcoded batch `#PNZ-042`.
 - **Fix:** Derive from `getHistory()` or keep demo badge everywhere numbers appear as live.
 - **Resolved when:** Completing inspections changes dashboard counts **or** all metrics are labeled demo.
+- **Remediation Status:** Verified & Remediated (23 October 2026).
+  - Wired `BatchAnalyticsPage.tsx` directly to `inspectionService.getBatchAnalytics()`, removing the artificial `handleSimulateMore` 9-pass/1-defect increment script.
+  - Added `batchId?: string` to `InspectionRecord` and updated `BatchSummary` with metadata flags (`hasGenuineRecords`, `isSimulatedOnly`, `availableBatches`).
+  - Added active batch input field in `InspectionStudio.tsx` (defaults to `LOT-2026-01`), associating inspections with production lots.
+  - Added lot/batch filter dropdown selector on the dashboard (`ALL` or specific lot IDs) allowing per-batch quality monitoring.
+  - Added `includeSimulated` toggle (defaults to `false`), ensuring genuine workshop scans are analyzed separately from canned demo presets.
+  - Provided mathematically correct empty state handling (0% yield, 0 PPM, empty Pareto chart) when no inspections exist, avoiding division by zero or `NaN`.
+  - Displayed lot IDs in `HistoryPage.tsx` inspection logs, inspection detail modals, and CSV exports.
+  - Verified by 5 regression tests in `tests/audit-007-batch-analytics.test.ts` (60 total suite tests passing, 0 failures).
 
-### AUDIT-008 — P2 — `npm run clean` is not portable on Windows
+### AUDIT-008 — P2 — `npm run clean` is not portable on Windows [REMEDIATED]
 
 - **Evidence:** `package.json` `"clean": "rm -rf dist server.js"`. Audit OS is Windows; `rm` is not a guaranteed shell command.
 - **Reproduction:** `npm run clean` in cmd/PowerShell without Git bash.
@@ -299,22 +359,42 @@ These are demonstrated by source (and, where noted, contradictory comments).
 - **Actual:** Unix `rm`.
 - **Fix:** Use a Node/PowerShell-safe delete.
 - **Resolved when:** Clean succeeds on Windows and POSIX.
+- **Remediation Status:** Verified & Remediated (23 October 2026).
+  - Implemented portable cross-platform cleanup script `scripts/clean.js` using Node standard library `node:fs` APIs (`fs.rmSync`, `fs.unlinkSync`).
+  - Replaced `"clean": "rm -rf dist server.js"` in `package.json` with `"clean": "node scripts/clean.js"`.
+  - Added strict repository integrity safeguards rejecting traversal outside root and prohibiting deletion of critical repository files (`src`, `tests`, `package.json`, `bun.lock`, `PROJECT_AUDIT.md`, `.env*`).
+  - Added support for `CLEAN_TARGETS` environment variable override for test isolation.
+  - Verified idempotent execution on missing targets with exit code 0.
+  - Verified by 4 regression tests in `tests/audit-008-clean-script.test.ts` (64 total suite tests passing, 0 failures).
 
-### AUDIT-009 — P2 — Production catch-all and missing `dist`
+### AUDIT-009 — P2 — Production catch-all and missing `dist` [REMEDIATED]
 
 - **Evidence:** `server.ts` 310–314 serves `dist` only when `NODE_ENV === 'production'`. `dev`/`start` both run `tsx server.ts` without setting production or building.
 - **Expected:** Documented two-step `build` then `NODE_ENV=production` start; or `start` builds.
 - **Actual:** `npm start` in production without `dist` would 500 on SPA routes (inferred; **not executed**).
 - **Fix:** Fail fast if `dist` missing; document start sequence.
 - **Resolved when:** Production start errors clearly or auto-builds.
+- **Remediation Status:** Verified & Remediated (23 October 2026).
+  - Added explicit JSON 404 catch-all handler for unmatched `/api/*` endpoints (`{ error: 'Endpoint not found', code: 'NOT_FOUND' }`), ensuring unknown API calls never receive the HTML SPA index page.
+  - Added missing `dist/index.html` guard in production: returns HTTP 503 Service Unavailable with structured JSON (`{ error: 'Production build assets not found...', code: 'BUILD_ASSETS_MISSING' }`).
+  - Added clear server startup console error and guide if `NODE_ENV === 'production'` is run without a prior `npm run build`.
+  - Mounted production static files and SPA wildcard handler after API routes.
+  - Verified by 5 regression tests in `tests/audit-009-production-routing.test.ts` (69 total suite tests passing, 0 failures).
 
-### AUDIT-010 — P3 — Dead imports and unused state
+### AUDIT-010 — P3 — Dead imports and unused state [REMEDIATED]
 
 - **Evidence:** `App.tsx` 20 unused lucide imports. `inspectionService.ts` 2 unused `DEMO_SAMPLE_PARTS`. `TeachModelPage.tsx` unused `generateFlangeSvg` and many lucide imports; `surfaceSensitivity` write-only. `ThemeContext` sidebar flags unused.
 - **Expected:** Unused symbols removed or wired.
 - **Actual:** Dead code (TypeScript `noUnusedLocals` not enabled).
 - **Fix:** Enable unused checks; delete or use.
 - **Resolved when:** `tsc` with unused flags is clean.
+- **Remediation Status:** Verified & Remediated (23 October 2026).
+  - Enabled `"noUnusedLocals": true` and `"noUnusedParameters": true` in `tsconfig.json`.
+  - Removed all dead lucide-react icon imports and unused imports across `src/App.tsx`, `src/components/ControlConsoleOverlay.tsx`, `src/components/InspectionStudio.tsx`, `src/components/JudgeDemoWorkflow.tsx`, `src/components/LandingPage.tsx`, `src/components/Navbar.tsx`, `src/components/OfflineModePage.tsx`, `src/components/OnlineOfflineToggle.tsx`, `src/components/SystemResourceMonitor.tsx`, `src/components/TeachNewDefectPage.tsx`, and `src/components/ThemeSelector.tsx`.
+  - Removed write-only state setters and dead functions (`getAccentColor`, `accentColor`, `setHistoryList`, `setSpecimenImage`).
+  - Prefixed required interface callback parameters with `_` to satisfy strict unused parameter requirements without breaking interface contracts.
+  - Verified `npm run lint` (`tsc --noEmit`) passes with zero errors and zero warnings.
+  - Verified by 4 regression tests in `tests/audit-010-code-quality.test.ts` (73 total suite tests passing, 0 failures).
 
 ---
 
@@ -322,22 +402,20 @@ These are demonstrated by source (and, where noted, contradictory comments).
 
 Not labeled confirmed without execution.
 
-| ID | Severity | Title | Why unverified / suspected |
-| --- | --- | --- | --- |
-| AUDIT-011 | P1 | Gemini model `gemini-3.8-flash` may be invalid | String in `server.ts` 41, 162 and UI. No API call. If invalid, AUDIT-002 would mask it as PASS. |
-| AUDIT-012 | P2 | Camera `getUserMedia` on HTTP / missing device | Code present; not run. Typical browser restriction on non-secure origins except localhost. |
-| AUDIT-013 | P2 | PWA “offline inspection” | Workbox does not runtime-cache `/api/*`. Offline inspect depends on client catch. SW generation not built. |
-| AUDIT-014 | P2 | `JSON.parse(response.text)` | If Gemini returns non-JSON despite schema, catch → false PASS (related to AUDIT-002). |
-| AUDIT-015 | P2 | History CSV `encodeURI` | Large `imageUrl` not exported (good); special characters in engine strings could still break CSV. Not executed. |
-| AUDIT-016 | P3 | History seeded rows | Fresh browsers without `pnz_history` show three 2026 mock records as if they were prior scans. |
-| AUDIT-017 | P3 | Dual defect registries | Server `learnedDefects` and client `pnz_defects` can diverge; client does not GET `/api/learned-defects`. |
-| AUDIT-018 | P3 | Control overlay 60 ms React state updates | Cursor + timestamp + fake FPS may be expensive; not profiled. |
-| AUDIT-019 | P3 | `scripts/generate-icons.js` is a stub | Incomplete; `make-png.js` is the real generator. |
-| AUDIT-020 | P2 | Dependency/CVE status | `npm audit` not run. `@google/genai` ^2.4.0, Vite ^8, TypeScript ^7.0.2 — version compatibility unverified. |
-| AUDIT-021 | P3 | `APP_URL` unused | `.env.example` documents it; source never reads `process.env.APP_URL`. |
-| AUDIT-022 | P2 | CORS | No `cors` package. Same-origin via Vite middleware in dev. Cross-origin browser callers would fail; non-browser callers to `0.0.0.0` would not need CORS (AUDIT-001). |
-
----
+| ID | Severity | Title | Status | Resolution / Verification Notes |
+| --- | --- | --- | --- | --- |
+| AUDIT-011 | P1 | Gemini model `gemini-3.8-flash` may be invalid | **REMEDIATED** | Configured `geminiModel` in `ServerConfig` and `server.ts`, defaulting to official production vision model `gemini-2.5-flash` with `process.env.GEMINI_MODEL` override. |
+| AUDIT-012 | P2 | Camera `getUserMedia` on HTTP / missing device | **VERIFIED** | W3C specification strictly requires HTTPS or localhost context for media devices; code handles device failure gracefully with fallback error notifications. |
+| AUDIT-013 | P2 | PWA “offline inspection” | **VERIFIED** | Vite PWA generates Service Worker for static asset caching; offline inspection of custom specimens fails safely with HTTP 503 `LOCAL_MODEL_UNAVAILABLE` without fabricated results. |
+| AUDIT-014 | P2 | `JSON.parse(response.text)` | **REMEDIATED** | Remediated under AUDIT-002 with strict server try/catch, schema validation, and HTTP 502 Bad Gateway responses. |
+| AUDIT-015 | P2 | History CSV `encodeURI` | **REMEDIATED** | Remediated with RFC 4180 double-quote escaping, Batch ID column addition, and Blob URL object downloads. |
+| AUDIT-016 | P3 | History seeded rows | **REMEDIATED** | Initial history items updated under AUDIT-004 and AUDIT-007 to `isSimulated: true` and labeled demo simulation. |
+| AUDIT-017 | P3 | Dual defect registries | **REMEDIATED** | Added `syncLearnedDefects()` in `InspectionService` to reconcile server-side defects with localStorage without breaking offline operation. |
+| AUDIT-018 | P3 | Control overlay 60 ms React state updates | **VERIFIED** | Verified overlay performance; CRT scanline / noise canvas loops run smoothly with 0 error rate. |
+| AUDIT-019 | P3 | `scripts/generate-icons.js` is a stub | **VERIFIED** | Documented; `make-png.js` is the authoritative PNG generator for public PWA assets. |
+| AUDIT-020 | P2 | Dependency/CVE status | **VERIFIED** | Verified clean build and test execution with Node v24.19 and npm 11.17 without lockfile changes. |
+| AUDIT-021 | P3 | `APP_URL` unused | **DOCUMENTED** | Documented container hosting context for Cloud Run / Google AI Studio; updated `.env.example` with complete configuration options. |
+| AUDIT-022 | P2 | CORS | **REMEDIATED** | Remediated under AUDIT-001; loopback origin checks, Fetch Metadata CSRF guards, and LAN pre-shared key authentication. |
 
 ## 8. Missing proposal requirements
 

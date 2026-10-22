@@ -1,5 +1,5 @@
 import React from 'react';
-import { Palette, Moon, Sun, Flame, Check } from 'lucide-react';
+import { Moon, Sun, Flame } from 'lucide-react';
 import { useUITheme, UITheme } from '../context/ThemeContext';
 import { industrialAudio } from '../utils/audio';
 

@@ -1,22 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Tv, 
-  Settings2, 
-  Sliders, 
-  Activity, 
-  ShieldCheck, 
-  Terminal, 
-  Zap, 
-  Eye, 
-  EyeOff, 
-  RotateCcw, 
-  Check, 
-  Crosshair,
-  Radio,
-  Cpu
-} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Tv, Zap } from 'lucide-react';
 import { industrialAudio } from '../utils/audio';
-import { useUITheme } from '../context/ThemeContext';
+
 
 interface ConsoleSettings {
   overlayActive: boolean;
@@ -43,7 +28,7 @@ const DEFAULT_SETTINGS: ConsoleSettings = {
 };
 
 export const ControlConsoleOverlay: React.FC = () => {
-  const { theme } = useUITheme();
+
   const [settings, setSettings] = useState<ConsoleSettings>(() => {
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
@@ -167,14 +152,6 @@ export const ControlConsoleOverlay: React.FC = () => {
     return () => cancelAnimationFrame(animId);
   }, [settings.overlayActive, settings.crtNoise]);
 
-  // Color accents based on active theme
-  const getAccentColor = () => {
-    if (theme === 'amber') return '#ffb703';
-    if (theme === 'emerald' || theme === 'cleanroom') return '#00ff66';
-    return '#00f0ff';
-  };
-
-  const accentColor = getAccentColor();
 
   return (
     <>
@@ -232,12 +209,12 @@ export const ControlConsoleOverlay: React.FC = () => {
                   <span className="text-[8px] text-zinc-500 font-bold">RASTER_V-SYNC::LOCK</span>
                   <div className="w-2.5 h-2.5 border-t-2 border-r-2 border-[#00f0ff] shadow-[0_0_8px_rgba(0,240,255,0.4)]" />
                 </div>
-                <div className="pr-3.5 text-[8px] text-zinc-600">{fpsVal} FPS // 31.47 kHz</div>
+                <div className="pr-3.5 text-[8px] text-zinc-600">{fpsVal} FPS (UI) // 31.47 kHz</div>
               </div>
 
               {/* Bottom-Left Reticle */}
               <div className="absolute bottom-2 left-2 flex flex-col gap-0.5 text-[9px] font-mono text-[#00f0ff]/70 tracking-widest">
-                <div className="pl-3.5 text-[8px] text-zinc-600">AOI_EDGE_PIPELINE::INT8</div>
+                <div className="pl-3.5 text-[8px] text-zinc-600">AOI_PIPELINE::DEMO_MODE</div>
                 <div className="flex items-center gap-1">
                   <div className="w-2.5 h-2.5 border-b-2 border-l-2 border-[#00f0ff] shadow-[0_0_8px_rgba(0,240,255,0.4)]" />
                   <span className="text-[8px] text-zinc-500 font-bold">FRAME_#{frameCounter}</span>
@@ -246,7 +223,7 @@ export const ControlConsoleOverlay: React.FC = () => {
 
               {/* Bottom-Right Reticle */}
               <div className="absolute bottom-2 right-2 flex flex-col items-end gap-0.5 text-[9px] font-mono text-[#00f0ff]/70 tracking-widest hidden sm:flex">
-                <div className="pr-3.5 text-[8px] text-zinc-600">LATENCY &lt;15MS // RING_64MB</div>
+                <div className="pr-3.5 text-[8px] text-zinc-600">TARGET &lt;15MS // DEMO_HUD</div>
                 <div className="flex items-center gap-1">
                   <span className="text-[8px] text-zinc-500 font-bold">CALIB: ISO-2859</span>
                   <div className="w-2.5 h-2.5 border-b-2 border-r-2 border-[#00f0ff] shadow-[0_0_8px_rgba(0,240,255,0.4)]" />

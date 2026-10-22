@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, Globe, HardDrive, ShieldCheck } from 'lucide-react';
+import { Wifi, WifiOff, Globe } from 'lucide-react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { industrialAudio } from '../utils/audio';
 
@@ -49,7 +49,7 @@ export const OnlineOfflineToggle: React.FC<OnlineOfflineToggleProps> = ({
               ? 'bg-black text-[#ffb703] border border-[#ffb703] shadow-[0_0_8px_rgba(255,183,3,0.4)]'
               : 'text-zinc-500 hover:text-zinc-300'
           }`}
-          title="Enable 100% air-gapped on-device Wasm edge inspection (<15ms)"
+          title="Enable air-gapped offline preset demonstration mode"
         >
           <WifiOff className="w-3 h-3 text-[#ffb703]" />
           <span>[OFFLINE]</span>
@@ -93,7 +93,7 @@ export const OnlineOfflineToggle: React.FC<OnlineOfflineToggleProps> = ({
             {!isOffline && <span className="text-[10px] px-1.5 py-0.2 bg-black text-[#00f0ff] border border-[#00f0ff] font-bold">ACTIVE</span>}
           </div>
           <p className="text-[10px] font-mono text-zinc-400 leading-tight">
-            Gemini 3.8 Flash Vision + Edge Fallback. Multimodal deep analysis.
+            Gemini 3.8 Flash Vision cloud inspection. Multimodal deep analysis.
           </p>
         </button>
 
@@ -114,7 +114,7 @@ export const OnlineOfflineToggle: React.FC<OnlineOfflineToggleProps> = ({
             {isOffline && <span className="text-[10px] px-1.5 py-0.2 bg-black text-[#ffb703] border border-[#ffb703] font-bold">ACTIVE</span>}
           </div>
           <p className="text-[10px] font-mono text-zinc-400 leading-tight">
-            100% on-device WebAssembly. Sub-15ms latency, $0 API costs, CAD secrecy.
+            Air-gapped operation. Zero cloud transmission. Preset simulator active (Local model not installed).
           </p>
         </button>
       </div>

@@ -3,28 +3,19 @@ import {
   Upload, 
   Camera, 
   Play, 
-  RotateCcw, 
-  ShieldCheck, 
   AlertTriangle, 
   HelpCircle, 
   Crosshair, 
-  Layers, 
   CheckCircle2, 
-  Cpu, 
-  Eye, 
-  EyeOff, 
   ZoomIn, 
   ZoomOut, 
-  Sliders,
   Sparkles,
   ArrowRight,
-  Info,
-  ChevronRight,
   X
 } from 'lucide-react';
 import { DEMO_SAMPLE_PARTS, SamplePartDef } from '../utils/partSVGs';
-import { InspectionRecord, PartProfile } from '../types/inspection';
-import { inspectionService, DEFAULT_PROFILES } from '../services/inspectionService';
+import { InspectionRecord } from '../types/inspection';
+import { inspectionService } from '../services/inspectionService';
 import { industrialAudio } from '../utils/audio';
 import { OnlineOfflineToggle } from './OnlineOfflineToggle';
 
@@ -58,17 +49,21 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [allowCloudProcessing, setAllowCloudProcessing] = useState<boolean>(false);
+  const [inspectionError, setInspectionError] = useState<string | null>(null);
+  const [specimenSource, setSpecimenSource] = useState<'preset' | 'upload' | 'camera'>('preset');
+  const [activeBatchId, setActiveBatchId] = useState<string>('LOT-2026-01');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const stages = [
-    'Initializing optical sensor tensor...',
+    'Ingesting optical sensor frame...',
     'Surface characteristics evaluation (Ra / Specular)',
     'Geometry & pitch circle diameter verification',
     'Edge consistency & contour runout tracking',
-    'Zero-shot anomaly boundary matrix computation',
+    'Surface boundary anomaly evaluation',
   ];
 
   // Stop camera when unmounting
@@ -83,9 +78,11 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
   // Handle preset selection
   const handleSelectPreset = (preset: SamplePartDef) => {
     industrialAudio.playClick();
+    setSpecimenSource('preset');
     setSelectedPartPreset(preset);
     setActiveImageUri(preset.svgDataUri);
     setLastResult(null);
+    setInspectionError(null);
     if (cameraActive) {
       stopCamera();
     }
@@ -99,8 +96,11 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
       reader.onload = (event) => {
         const base64 = event.target?.result as string;
         industrialAudio.playClick();
+        setSpecimenSource('upload');
+        setSelectedPartPreset(null as any);
         setActiveImageUri(base64);
         setLastResult(null);
+        setInspectionError(null);
       };
       reader.readAsDataURL(file);
     }
@@ -150,6 +150,7 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
       stopCamera();
       industrialAudio.playPass();
       setLastResult(null);
+      setInspectionError(null);
     }
   };
 
@@ -159,6 +160,7 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
     industrialAudio.playClick();
     setIsInspecting(true);
     setLastResult(null);
+    setInspectionError(null);
     setInspectionStage(0);
 
     // Sequence through inspection animation stages
@@ -171,19 +173,47 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
       });
     }, 280);
 
+    const isDemoSimulation = specimenSource === 'preset';
+
+    // Guard: Real inspection of custom image cannot run offline or without cloud consent
+    if (!isDemoSimulation) {
+      if (isOffline) {
+        clearInterval(stageInterval);
+        setIsInspecting(false);
+        setLastResult(null);
+        setInspectionError('Real offline inspection is unavailable: No local computer vision model runtime is installed. Please enable Cloud AI Analysis (Gemini) or select a test bench preset to simulate.');
+        industrialAudio.playAlert();
+        return;
+      }
+      if (!allowCloudProcessing) {
+        clearInterval(stageInterval);
+        setIsInspecting(false);
+        setLastResult(null);
+        setInspectionError('Real inspection of custom specimen requires cloud AI consent. Enable the Cloud AI Analysis (Gemini) toggle above to proceed.');
+        industrialAudio.playAlert();
+        return;
+      }
+    }
+
     try {
-      const condition = selectedPartPreset?.condition || 'NORMAL';
-      let simulatedPreset: any = 'normal';
-      if (condition === 'SCRATCH') simulatedPreset = 'scratch';
-      else if (condition === 'CRACK') simulatedPreset = 'crack';
-      else if (condition === 'DENT') simulatedPreset = 'dent';
-      else if (condition === 'UNKNOWN') simulatedPreset = 'unknown';
+      const condition = isDemoSimulation ? (selectedPartPreset?.condition || 'NORMAL') : undefined;
+      let simulatedPreset: any = undefined;
+      if (isDemoSimulation) {
+        if (condition === 'SCRATCH') simulatedPreset = 'scratch';
+        else if (condition === 'CRACK') simulatedPreset = 'crack';
+        else if (condition === 'DENT') simulatedPreset = 'dent';
+        else if (condition === 'UNKNOWN') simulatedPreset = 'unknown';
+        else simulatedPreset = 'normal';
+      }
 
       const result = await inspectionService.inspectPart({
         imageBase64: activeImageUri,
+        allowCloudProcessing,
+        isDemoSimulation,
         partProfile: activeProfile,
         forceOffline: isOffline,
         simulatedPreset,
+        batchId: activeBatchId.trim() || undefined,
       });
 
       clearInterval(stageInterval);
@@ -199,9 +229,13 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
       } else {
         industrialAudio.playAlert();
       }
-    } catch (err) {
+    } catch (err: any) {
       clearInterval(stageInterval);
       setIsInspecting(false);
+      setLastResult(null);
+      const msg = err?.message || 'Inspection failed: Upstream service or processing error';
+      setInspectionError(msg);
+      industrialAudio.playAlert();
       console.error('Inspection failed:', err);
     }
   };
@@ -233,7 +267,7 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
             <div className="px-3 py-1 bg-black border border-zinc-800 text-xs font-mono flex items-center gap-2">
               <span className="text-zinc-500">[ENGINE]:</span>
               <span className={isOffline ? 'text-[#ffb703] font-bold' : 'text-[#00f0ff] font-bold'}>
-                {isOffline ? 'LOCAL WASM (11.4ms)' : 'HYBRID GEMINI FLASH'}
+                {isOffline ? 'OFFLINE DEMO SIMULATOR' : 'CLOUD VISION (GEMINI)'}
               </span>
             </div>
           </div>
@@ -267,6 +301,17 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
                   <option value="Precision Gear (PNZ-GEAR-M12)">Precision Gear (PNZ-GEAR-M12)</option>
                   <option value="CNC Milled Flange (PNZ-FLG-44)">CNC Milled Flange (PNZ-FLG-44)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="text-zinc-500 block mb-1 font-bold">[PRODUCTION LOT / BATCH ID]</label>
+                <input
+                  type="text"
+                  value={activeBatchId}
+                  onChange={(e) => setActiveBatchId(e.target.value)}
+                  placeholder="e.g. LOT-2026-01"
+                  className="w-full bg-black border border-zinc-700 text-white text-xs p-2 font-mono focus:outline-none focus:border-[#00f0ff]"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
@@ -340,6 +385,31 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
                   {cameraError}
                 </div>
               )}
+
+              <div className="p-2.5 bg-black border border-zinc-800 space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400 font-bold">[CLOUD AI ANALYSIS]:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      industrialAudio.playClick();
+                      setAllowCloudProcessing(!allowCloudProcessing);
+                    }}
+                    className={`px-2 py-0.5 text-[10px] font-bold border transition-colors ${
+                      allowCloudProcessing
+                        ? 'bg-black text-[#00f0ff] border-[#00f0ff] shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                        : 'bg-black text-zinc-500 border-zinc-800'
+                    }`}
+                  >
+                    {allowCloudProcessing ? 'OPT-IN: ENABLED' : 'OPT-IN: DISABLED'}
+                  </button>
+                </div>
+                <p className="text-[10px] text-zinc-500 leading-tight">
+                  {allowCloudProcessing
+                    ? 'Transmits image frames to Google Gemini for cloud multimodal vision analysis.'
+                    : 'Cloud processing disabled. No image frames leave this machine.'}
+                </p>
+              </div>
 
               <button
                 onClick={handleRunInspection}
@@ -639,10 +709,45 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
 
             {/* Bottom HUD Telemetry Strip */}
             <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-zinc-400 px-1 pt-2 border-t border-zinc-800">
-              <div>[SPECIMEN]: <strong className="text-white">{selectedPartPreset.name}</strong></div>
-              <div className="text-[#00f0ff] font-bold">[ENGINE: ZERO-SHOT EDGE TENSOR RUNNING]</div>
+              <div>[SPECIMEN]: <strong className="text-white">{specimenSource === 'preset' ? (selectedPartPreset?.name || 'Test Bench Preset') : specimenSource === 'upload' ? 'Operator Custom Upload' : 'Live Camera Snapshot'}</strong> <span className="text-[10px] text-zinc-500">[{specimenSource.toUpperCase()}]</span></div>
+              <div className={specimenSource === 'preset' ? "text-[#ffb703] font-bold" : "text-[#00f0ff] font-bold"}>
+                {specimenSource === 'preset' ? '[ENGINE: DEMO PRESET SIMULATION]' : (isOffline ? '[ENGINE: OFFLINE (NO LOCAL MODEL)]' : '[ENGINE: CLOUD VISION GATEWAY]')}
+              </div>
             </div>
           </div>
+
+          {/* INSPECTION ERROR BANNER */}
+          {inspectionError && (
+            <div className="relative bg-black border-2 border-[#ff0055] p-5 font-mono space-y-3 shadow-[0_0_25px_rgba(255,0,85,0.3)]">
+              <div className="corner-marker-tl border-[#ff0055]"></div>
+              <div className="corner-marker-tr border-[#ff0055]"></div>
+              <div className="corner-marker-bl border-[#ff0055]"></div>
+              <div className="corner-marker-br border-[#ff0055]"></div>
+
+              <div className="flex items-center gap-3 border-b border-zinc-800 pb-3">
+                <div className="w-10 h-10 flex items-center justify-center bg-black text-[#ff0055] border border-[#ff0055] shadow-[0_0_10px_rgba(255,0,85,0.4)]">
+                  <AlertTriangle className="w-6 h-6 text-[#ff0055]" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
+                    [SYSTEM DIAGNOSTIC // INSPECTION FAILED]
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black tracking-widest text-[#ff0055] neon-text-rose">
+                    INSPECTION ERROR
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-300">
+                {inspectionError}
+              </p>
+
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500 pt-1">
+                <span className="text-[#ff0055] font-bold">[HALTED]:</span>
+                <span>No false PASS generated. Record was not saved to inspection history.</span>
+              </div>
+            </div>
+          )}
 
           {/* INSPECTION RESULT CARD (Explicitly Required on Page 2) */}
           {lastResult && (
@@ -677,8 +782,19 @@ export const InspectionStudio: React.FC<InspectionStudioProps> = ({
                     )}
                   </div>
                   <div>
-                    <div className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
-                      [INSPECTION RESULT]
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
+                        [INSPECTION RESULT]
+                      </div>
+                      {lastResult.isSimulated ? (
+                        <span className="px-1.5 py-0.5 bg-black border border-[#ffb703] text-[#ffb703] text-[9px] font-bold">
+                          [DEMO PRESET SIMULATION]
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-black border border-[#00f0ff] text-[#00f0ff] text-[9px] font-bold">
+                          [REAL CLOUD AI INSPECTION]
+                        </span>
+                      )}
                     </div>
                     <div className={`text-2xl sm:text-3xl font-black tracking-widest ${
                       lastResult.status === 'PASS'

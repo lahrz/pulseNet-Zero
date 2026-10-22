@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
 import { InspectionStudio } from './components/InspectionStudio';
@@ -17,7 +17,7 @@ import { ControlConsoleOverlay } from './components/ControlConsoleOverlay';
 import { industrialAudio } from './utils/audio';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { ThemeProvider } from './context/ThemeContext';
-import { ShieldCheck, Cpu, WifiOff, Wifi, Sparkles, Terminal, Activity, Info } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 
 export default function App() {
   const isBrowserOnline = useOnlineStatus();
@@ -91,6 +91,7 @@ export default function App() {
           <TeachNewDefectPage
             initialImage={teachDefectImage}
             onNavigateToInspection={() => setActiveTab('inspection')}
+            isOffline={isOffline}
           />
         )}
 
@@ -139,8 +140,8 @@ export default function App() {
               <span className="text-[#00f0ff] font-semibold">National Student Ideation Challenge // MSME AOI</span>
             </div>
             <div className="text-center sm:text-right text-xs">
-              <div className="text-zinc-300 font-bold">&lt;15ms Edge Latency</div>
-              <div className="text-[#00ff66] font-bold">100% Offline Capable</div>
+              <div className="text-zinc-300 font-bold">&lt;15ms Target Latency (Spec)</div>
+              <div className="text-[#00ff66] font-bold">Offline Demo Capable</div>
             </div>
           </div>
         </div>
@@ -160,7 +161,7 @@ export default function App() {
             </span>
           </div>
           <span className="text-zinc-400 text-[11px] hidden sm:inline">
-            Local Edge Wasm inference active (&lt;15ms). Zero cloud packet transmission.
+            Offline demo mode active. Zero cloud packet transmission. (Local model runtime not installed; presets simulated).
           </span>
           <button
             onClick={() => {

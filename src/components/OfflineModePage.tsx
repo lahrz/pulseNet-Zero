@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { 
   WifiOff, 
   Wifi, 
-  ShieldCheck, 
   Cpu, 
   Zap, 
   Lock, 
-  DollarSign, 
   Play, 
   CheckCircle2, 
-  Activity,
-  Layers,
   ArrowRight
 } from 'lucide-react';
 import { industrialAudio } from '../utils/audio';
@@ -44,7 +40,7 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
     setBenchmarkRunning(true);
     setBenchmarkResult(null);
 
-    // Simulate 50 frame WebAssembly tensor operations in browser
+    // Simulate target <15ms latency specification in demo UI
     setTimeout(() => {
       const simulatedLatency = parseFloat((Math.random() * 3 + 11.2).toFixed(1)); // 11.2ms - 14.2ms
       setBenchmarkResult(simulatedLatency);
@@ -116,12 +112,12 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
             <div className="flex items-center justify-between">
               <span className="font-bold text-[#ffb703] flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#ffb703] animate-ping"></span>
-                SYSTEM STATUS: OFFLINE // LOCAL PROCESSING ACTIVE
+                SYSTEM STATUS: OFFLINE // DEMO PRESET SIMULATION MODE
               </span>
               <span className="text-[#ffb703] font-mono font-bold">[100% AIR-GAPPED]</span>
             </div>
             <p className="text-zinc-300 text-xs">
-              Cloud vision APIs disabled. Inference executing entirely client-side via on-device WebAssembly and SIMD-accelerated canvas pixel contour comparison.
+              Cloud vision APIs disabled. Real-time inspection runs in demo preset simulation mode. On-device WebAssembly/ONNX inference runtime is not installed.
             </p>
           </div>
         ) : (
@@ -140,12 +136,12 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
             <Cpu className="w-4 h-4 text-[#00f0ff]" />
           </div>
           <div className="text-base font-bold text-white">
-            {isOffline ? 'LOCAL PROCESSING' : 'CLOUD / EDGE HYBRID'}
+            {isOffline ? 'DEMO PRESET SIMULATION' : 'CLOUD / VISION GATEWAY'}
           </div>
           <div className="text-xs text-zinc-400 font-mono">
             {isOffline 
-              ? 'Wasm edge classifier using learned 8-sample normality tensor bounds.' 
-              : 'Server-side Gemini 3.8 Flash Vision with automatic edge fallback.'}
+              ? 'Canned preset verification simulation (No local ONNX/WASM runtime installed).' 
+              : 'Server-side Gemini 3.8 Flash Vision (requires consent & configured API key).'}
           </div>
         </div>
 
@@ -156,11 +152,11 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
             <Zap className="w-4 h-4 text-[#00ff66]" />
           </div>
           <div className="text-2xl font-black text-[#00ff66] tabular-nums">
-            {isOffline ? '12.4 ms' : '820 ms'}
+            {isOffline ? '~12 ms (Simulated)' : '820 ms (Typical)'}
           </div>
           <div className="text-xs text-zinc-400 font-mono">
             {isOffline 
-              ? 'Sub-15ms edge inference meets the National Student Ideation Challenge target.' 
+              ? 'Target latency specification (<15ms). Value is simulated for demo presets.' 
               : 'Full multimodal semantic reasoning across remote cloud infrastructure.'}
           </div>
         </div>
@@ -190,10 +186,10 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-3">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              [ON-DEVICE EDGE BENCHMARK // SUB-15MS VERIFIER]
+              [PROPOSED EDGE BENCHMARK // SYNTHETIC SIMULATOR]
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Simulates 50 consecutive optical frame evaluations directly inside your browser.
+              Simulates the target &lt;15ms latency envelope for on-device inference (Local WASM/ONNX runtime not installed; synthetic demonstration value).
             </p>
           </div>
 
@@ -214,12 +210,12 @@ export const OfflineModePage: React.FC<OfflineModePageProps> = ({
               <div>
                 <div className="text-xs text-[#00ff66] font-bold">[BENCHMARK COMPLETE]</div>
                 <div className="text-xs text-zinc-300 font-mono">
-                  Edge frame evaluation time: <strong className="text-[#00ff66] font-bold text-sm tabular-nums">{benchmarkResult} ms</strong> per part.
+                  Synthetic demo latency: <strong className="text-[#00ff66] font-bold text-sm tabular-nums">{benchmarkResult} ms</strong> per part (Simulated target).
                 </div>
               </div>
             </div>
             <div className="text-xs font-bold text-[#00ff66]">
-              STATUS: [PASSED // SUB-15MS COMPLIANT]
+              STATUS: [SIMULATED TARGET // SPECIFICATION DEMO]
             </div>
           </div>
         )}
